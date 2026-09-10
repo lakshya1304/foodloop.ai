@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Users, BarChart3, TrendingDown, Factory, HeartHandshake, Banknote, Droplets, MapPin } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -8,33 +8,44 @@ import dynamic from 'next/dynamic';
 const GlobalHeatmap = dynamic(() => import('@/components/Map/GlobalHeatmap'), { ssr: false });
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<any>(null);
-  const [activity, setActivity] = useState<any[]>([]);
-  const [orgs, setOrgs] = useState<any[]>([]);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: statsRes, isLoading: loadingStats } = useQuery({
+    queryKey: ['system-overview'],
+    queryFn: async () => {
+      const res = await api.get('/analytics/system-overview');
+      return res.data.data;
+    }
+  });
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [statsRes, activityRes, orgsRes, auditRes] = await Promise.all([
-          api.get('/analytics/system-overview'),
-          api.get('/analytics/activity-timeline'),
-          api.get('/analytics/organizations'),
-          api.get('/audit-logs')
-        ]);
-        setStats(statsRes.data.data);
-        setActivity(activityRes.data.data);
-        setOrgs(orgsRes.data.data);
-        setAuditLogs(auditRes.data.data || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
+  const { data: activityRes, isLoading: loadingActivity } = useQuery({
+    queryKey: ['activity-timeline'],
+    queryFn: async () => {
+      const res = await api.get('/analytics/activity-timeline');
+      return res.data.data;
+    }
+  });
+
+  const { data: orgsRes, isLoading: loadingOrgs } = useQuery({
+    queryKey: ['organizations'],
+    queryFn: async () => {
+      const res = await api.get('/analytics/organizations');
+      return res.data.data;
+    }
+  });
+
+  const { data: auditRes, isLoading: loadingAudit } = useQuery({
+    queryKey: ['audit-logs'],
+    queryFn: async () => {
+      const res = await api.get('/audit-logs');
+      return res.data.data;
+    }
+  });
+
+  const stats = statsRes || null;
+  const activity = activityRes || [];
+  const orgs = orgsRes || [];
+  const auditLogs = auditRes || [];
+
+  const loading = loadingStats || loadingActivity || loadingOrgs || loadingAudit;
 
   if (loading) return (
     <div className="min-h-[80vh] flex items-center justify-center">

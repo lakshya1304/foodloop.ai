@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Navigation, MapPin, CheckCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,42 +10,41 @@ import dynamic from 'next/dynamic';
 const RouteMap = dynamic(() => import('@/components/Map/RouteMap'), { ssr: false });
 
 export default function DriverDashboard() {
-  const [tasks, setTasks] = useState<any>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: tasksRes, isLoading, refetch } = useQuery({
+    queryKey: ['deliveries'],
+    queryFn: async () => {
+      const res = await api.get('/deliveries');
+      return res.data.data.map((d: any) => ({
+        id: d.id,
+        status: d.status,
+        surplus: d.redistribution.surplus,
+        ngo: d.redistribution.ngo,
+        routeOptimized: d.calculatedRoute
+      }));
+    }
+  });
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const res = await api.get('/deliveries');
-        const mappedTasks = res.data.data.map((d: any) => ({
-          id: d.id,
-          status: d.status,
-          surplus: d.redistribution.surplus,
-          ngo: d.redistribution.ngo,
-          routeOptimized: d.calculatedRoute
-        }));
-        setTasks(mappedTasks);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
+  const tasks = tasksRes || [];
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
       await api.post(`/deliveries/${id}/status`, { status });
-      // Update local state
-      setTasks(tasks.map((t: any) => t.id === id ? { ...t, status } : t));
+      
+      // Optimistic update
+      queryClient.setQueryData(['deliveries'], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((t: any) => t.id === id ? { ...t, status } : t);
+      });
+      
       toast.success('Status updated successfully');
+      refetch();
     } catch (err) {
       toast.error('Error updating status');
     }
   };
 
-  if (loading) return <DashboardSkeleton />;
+  if (isLoading) return <DashboardSkeleton />;
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-10 animate-fade-in-up">

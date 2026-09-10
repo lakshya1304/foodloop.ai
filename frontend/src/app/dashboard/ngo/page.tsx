@@ -1,42 +1,38 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { CheckCircle2, MapPin, Package, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 
 export default function NgoDashboard() {
-  const [surpluses, setSurpluses] = useState<any>([]);
-  const [stats, setStats] = useState<any>({ acceptedToday: 0, pendingArrival: 0 });
-  const [loading, setLoading] = useState(true);
-
-  const loadData = async () => {
-    try {
-      const [surplusRes, statsRes] = await Promise.all([
-        api.get('/ngos/available-surplus'),
-        api.get('/ngos/dashboard-stats')
-      ]);
-      setSurpluses(surplusRes.data.data);
-      setStats(statsRes.data.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const { data: surplusRes, isLoading: loadingSurplus, refetch: refetchSurplus } = useQuery({
+    queryKey: ['available-surplus'],
+    queryFn: async () => {
+      const res = await api.get('/ngos/available-surplus');
+      return res.data.data;
     }
-  };
+  });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const { data: statsRes, isLoading: loadingStats, refetch: refetchStats } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      const res = await api.get('/ngos/dashboard-stats');
+      return res.data.data;
+    }
+  });
+
+  const surpluses = surplusRes || [];
+  const stats = statsRes || { acceptedToday: 0, pendingArrival: 0 };
+  const loading = loadingSurplus || loadingStats;
 
   const handleAccept = async (id: string, quantity: number) => {
     try {
       await api.post('/ngos/accept-surplus', { surplusId: id, quantityRequested: quantity });
-      // Remove from list and reload stats
-      setSurpluses(surpluses.filter((s: any) => s.id !== id));
       toast.success('Surplus accepted and delivery scheduled!');
-      loadData();
+      refetchSurplus();
+      refetchStats();
     } catch (err) {
       toast.error('Error accepting surplus');
     }

@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: 'AI-powered platform to predict food demand, manage inventory, and redistribute surplus food.',
 };
 
+import { QueryProvider } from '@/components/QueryProvider';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -20,8 +22,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
         <ReduxProvider>
-          {children}
-          <Toaster position="bottom-right" richColors closeButton />
+          <QueryProvider>
+            {children}
+            <Toaster position="bottom-right" richColors closeButton />
+          </QueryProvider>
         </ReduxProvider>
       </body>
     </html>

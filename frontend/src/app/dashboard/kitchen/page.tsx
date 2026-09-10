@@ -1,19 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Activity, AlertTriangle, Package, Utensils, Zap, Plus, Camera, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
+import { DashboardSkeleton } from '@/components/ui/Skeleton';
 
 export default function KitchenDashboard() {
-  const [data, setData] = useState<any>(null);
-  const [inventory, setInventory] = useState<any>([]);
-  const [sensors, setSensors] = useState<any>([]);
-  const [recommendations, setRecommendations] = useState<any>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Modal states
   const [showScanModal, setShowScanModal] = useState(false);
   const [showProdModal, setShowProdModal] = useState(false);
   const [showConsModal, setShowConsModal] = useState(false);
@@ -29,29 +24,53 @@ export default function KitchenDashboard() {
   const [prodForm, setProdForm] = useState({ foodItem: '', quantityProduced: 0, unit: 'kg' });
   const [consForm, setConsForm] = useState({ foodItem: '', quantityConsumed: 0, unit: 'kg' });
 
-  const loadData = async () => {
-    try {
-      const [dashRes, invRes, sensRes, recRes, leadRes] = await Promise.all([
-        api.get('/analytics/kitchen-dashboard'),
-        api.get('/inventory'),
-        api.get('/sensors').catch(() => ({ data: { data: [] } })),
-        api.get('/ai/recommendations').catch(() => ({ data: { data: [] } })),
-        api.get('/analytics/leaderboard').catch(() => ({ data: { data: null } }))
-      ]);
-      setData({ ...dashRes.data.data, leaderboard: leadRes.data.data });
-      setInventory(invRes.data.data);
-      setSensors(sensRes.data.data);
-      setRecommendations(recRes.data.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  // --- TanStack Query Data Fetching ---
+  const { data: dashRes, isLoading: loadingDash, refetch: refetchDash } = useQuery({
+    queryKey: ['kitchen-dashboard'],
+    queryFn: async () => {
+      const res = await api.get('/analytics/kitchen-dashboard');
+      return res.data.data;
     }
-  };
+  });
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const { data: invRes, isLoading: loadingInv, refetch: refetchInv } = useQuery({
+    queryKey: ['inventory'],
+    queryFn: async () => {
+      const res = await api.get('/inventory');
+      return res.data.data;
+    }
+  });
+
+  const { data: sensRes, isLoading: loadingSens } = useQuery({
+    queryKey: ['sensors'],
+    queryFn: async () => {
+      const res = await api.get('/sensors');
+      return res.data.data;
+    }
+  });
+
+  const { data: recRes, isLoading: loadingRec } = useQuery({
+    queryKey: ['recommendations'],
+    queryFn: async () => {
+      const res = await api.get('/ai/recommendations');
+      return res.data.data;
+    }
+  });
+
+  const { data: leadRes, isLoading: loadingLead } = useQuery({
+    queryKey: ['leaderboard'],
+    queryFn: async () => {
+      const res = await api.get('/analytics/leaderboard');
+      return res.data.data;
+    }
+  });
+
+  const data = dashRes ? { ...dashRes, leaderboard: leadRes } : null;
+  const inventory = invRes || [];
+  const sensors = sensRes || [];
+  const recommendations = recRes || [];
+
+  const loading = loadingDash || loadingInv;
 
   const handleScan = async () => {
     if (!scanText && !scanImage) {
@@ -63,14 +82,14 @@ export default function KitchenDashboard() {
       const payload: any = {};
       if (scanText) payload.text = scanText;
       if (scanImage) {
-        const [meta, data] = scanImage.split(',');
+        const [meta, imgData] = scanImage.split(',');
         const mimeType = meta.match(/:(.*?);/)?.[1] || 'image/jpeg';
-        payload.imageParts = [{ inlineData: { data, mimeType } }];
+        payload.imageParts = [{ inlineData: { data: imgData, mimeType } }];
       }
       
       const res = await api.post('/ai/ocr-extract', payload);
       setScanResult(res.data.data);
-      setQualityResult(null); // Clear previous quality result
+      setQualityResult(null);
     } catch (err) {
       toast.error('Error extracting data. Please try again.');
     } finally {
@@ -85,13 +104,13 @@ export default function KitchenDashboard() {
     }
     setScanLoading(true);
     try {
-      const [meta, data] = scanImage.split(',');
+      const [meta, imgData] = scanImage.split(',');
       const mimeType = meta.match(/:(.*?);/)?.[1] || 'image/jpeg';
-      const payload = { imageParts: [{ inlineData: { data, mimeType } }] };
+      const payload = { imageParts: [{ inlineData: { data: imgData, mimeType } }] };
       
       const res = await api.post('/ai/analyze-quality', payload);
       setQualityResult(res.data.data);
-      setScanResult(null); // Clear previous OCR result
+      setScanResult(null);
     } catch (err) {
       toast.error('Error analyzing quality. Please try again.');
     } finally {
@@ -114,7 +133,7 @@ export default function KitchenDashboard() {
       toast.success('Inventory saved successfully!');
       setShowScanModal(false);
       setScanResult(null);
-      loadData();
+      refetchInv();
     } catch (err) {
       toast.error('Failed to save inventory');
     }
@@ -131,7 +150,7 @@ export default function KitchenDashboard() {
       toast.success('Production recorded successfully!');
       setShowProdModal(false);
       setProdForm({ foodItem: '', quantityProduced: 0, unit: 'kg' });
-      loadData();
+      refetchDash();
     } catch (err) {
       toast.error('Failed to record production');
     }
@@ -148,7 +167,7 @@ export default function KitchenDashboard() {
       toast.success('Consumption recorded and potential surplus created!');
       setShowConsModal(false);
       setConsForm({ foodItem: '', quantityConsumed: 0, unit: 'kg' });
-      loadData();
+      refetchDash();
     } catch (err) {
       toast.error('Failed to record consumption');
     }

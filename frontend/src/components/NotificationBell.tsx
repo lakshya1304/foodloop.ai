@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Bell } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Notification {
   id: string;
@@ -11,30 +12,28 @@ interface Notification {
 }
 
 export function NotificationBell() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const res = await api.get('/notifications');
-        if (res.data.success) {
-          setNotifications(res.data.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch notifications", err);
-      }
-    };
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // refresh every minute
-    return () => clearInterval(interval);
-  }, []);
+  const { data: notificationsRes } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const res = await api.get('/notifications');
+      return res.data.data;
+    },
+    refetchInterval: 60000 // refetch every minute automatically
+  });
+
+  const notifications: Notification[] = notificationsRes || [];
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAsRead = async (id: string) => {
     try {
       await api.patch(`/notifications/${id}/read`);
-      setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+      queryClient.setQueryData(['notifications'], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.map((n: Notification) => n.id === id ? { ...n, read: true } : n);
+      });
     } catch (err) {
       console.error("Failed to mark as read", err);
     }
