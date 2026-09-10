@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Leaf, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { 
+  Leaf, LogOut, LayoutDashboard, Settings, PackageOpen, 
+  LineChart, ShoppingCart, Truck, History, Users, Database, ShieldAlert
+} from 'lucide-react';
 import { api } from '@/lib/api';
 import { NotificationBell } from '@/components/NotificationBell';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,6 +15,7 @@ import { RootState, AppDispatch } from '@/store/store';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const dispatch = useDispatch<AppDispatch>();
   const { user, status } = useSelector((state: RootState) => state.auth);
 
@@ -30,6 +34,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     dispatch(reduxLogout());
     router.push('/');
   };
+
+  const getNavLinks = (role: string) => {
+    const base = `/dashboard/${role.split('_')[0].toLowerCase()}`;
+    switch(role) {
+      case 'KITCHEN_MANAGER':
+        return [
+          { name: 'Dashboard', href: base, icon: LayoutDashboard },
+          { name: 'Smart Inventory', href: `${base}/inventory`, icon: PackageOpen },
+          { name: 'Production & Analytics', href: `${base}/production`, icon: LineChart },
+        ];
+      case 'NGO_MANAGER':
+        return [
+          { name: 'Dashboard', href: base, icon: LayoutDashboard },
+          { name: 'Surplus Marketplace', href: `${base}/marketplace`, icon: ShoppingCart },
+          { name: 'Incoming Deliveries', href: `${base}/incoming`, icon: Truck },
+        ];
+      case 'DRIVER':
+        return [
+          { name: 'Active Route', href: base, icon: Truck },
+          { name: 'Delivery History', href: `${base}/history`, icon: History },
+        ];
+      case 'SYSADMIN':
+        return [
+          { name: 'Network Overview', href: base, icon: LayoutDashboard },
+          { name: 'Organizations', href: `${base}/organizations`, icon: Users },
+          { name: 'Audit Trail', href: `${base}/audit`, icon: Database },
+        ];
+      default:
+        return [{ name: 'Dashboard', href: base, icon: LayoutDashboard }];
+    }
+  };
+
+  const navLinks = user ? getNavLinks(user.role) : [];
 
   if (status === 'loading' || !user) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -53,11 +90,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         
         <div className="flex-1 py-8 px-6 space-y-2">
           <div className="px-3 mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">Menu</div>
-          <Link href={`/dashboard/${user.role.split('_')[0].toLowerCase()}`} className="bg-emerald-50 text-emerald-700 flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 shadow-sm border border-emerald-100/50 group">
-            <LayoutDashboard className="h-5 w-5 mr-3 text-emerald-600 group-hover:scale-110 transition-transform" />
-            Dashboard
-          </Link>
-          <Link href="/dashboard/settings" className="text-slate-500 hover:bg-slate-50 hover:text-slate-900 flex items-center px-4 py-3 text-sm font-bold rounded-xl w-full text-left transition-all duration-200 group">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link 
+                key={link.name}
+                href={link.href} 
+                className={`flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group ${
+                  isActive 
+                  ? 'bg-emerald-50 text-emerald-700 shadow-sm border border-emerald-100/50' 
+                  : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                }`}
+              >
+                <link.icon className={`h-5 w-5 mr-3 transition-transform ${
+                  isActive ? 'text-emerald-600 group-hover:scale-110' : 'text-slate-400 group-hover:-rotate-12'
+                }`} />
+                {link.name}
+              </Link>
+            )
+          })}
+          <div className="my-4 border-t border-slate-100"></div>
+          <Link href="/dashboard/settings" className="text-slate-500 hover:bg-slate-50 hover:text-slate-900 flex items-center px-4 py-3 text-sm font-bold rounded-xl w-full text-left transition-all duration-200 group border border-transparent">
             <Settings className="h-5 w-5 mr-3 text-slate-400 group-hover:rotate-45 transition-transform" />
             Settings
           </Link>

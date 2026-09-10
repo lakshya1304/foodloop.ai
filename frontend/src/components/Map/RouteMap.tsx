@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Fix Leaflet's default icon path issues in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -27,9 +27,32 @@ export default function RouteMap({ tasks }: { tasks: any[] }) {
   // Active task's route (just taking the first IN_TRANSIT or PENDING task for the map)
   const activeTask = tasks.find(t => t.status === 'IN_TRANSIT') || tasks[0];
 
-  // We will mock coordinates if actual coordinates are missing.
   const pickupCoords: [number, number] = [28.6139, 77.2090];
   const dropoffCoords: [number, number] = [28.5355, 77.2410]; // Some other point in Delhi
+
+  // Create a custom driver icon
+  const driverIcon = new L.Icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/732/732204.png',
+    iconSize: [32, 32],
+    className: 'animate-pulse drop-shadow-xl'
+  });
+
+  const [currentPos, setCurrentPos] = useState<[number, number]>(pickupCoords);
+
+  useEffect(() => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 0.01;
+      if (progress > 1) progress = 0; // Loop for demo purposes
+      
+      const lat = pickupCoords[0] + (dropoffCoords[0] - pickupCoords[0]) * progress;
+      const lng = pickupCoords[1] + (dropoffCoords[1] - pickupCoords[1]) * progress;
+      
+      setCurrentPos([lat, lng]);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="h-96 w-full rounded-2xl overflow-hidden shadow-inner border border-slate-200 relative z-0">
@@ -44,7 +67,15 @@ export default function RouteMap({ tasks }: { tasks: any[] }) {
         <Marker position={dropoffCoords}>
           <Popup>Dropoff: {activeTask.ngo.name}</Popup>
         </Marker>
-        <Polyline positions={[pickupCoords, dropoffCoords]} color="blue" weight={4} dashArray="10, 10" />
+        <Marker position={currentPos} icon={driverIcon} zIndexOffset={1000}>
+          <Popup>Driver In Transit</Popup>
+        </Marker>
+        <Polyline positions={[pickupCoords, dropoffCoords]} color="#3b82f6" weight={5} dashArray="10, 15" className="animate-[dash_20s_linear_infinite]" />
+        <style>{`
+          @keyframes dash {
+            to { stroke-dashoffset: -1000; }
+          }
+        `}</style>
       </MapContainer>
     </div>
   );

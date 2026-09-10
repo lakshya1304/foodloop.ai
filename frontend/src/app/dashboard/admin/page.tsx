@@ -118,7 +118,7 @@ export default function AdminDashboard() {
           <div className="space-y-6">
             {activity.length > 0 ? (
               <div className="relative border-l-2 border-slate-100 ml-4 space-y-8">
-                {activity.map((act) => (
+                {activity.map((act: any) => (
                   <div key={act.id} className="relative pl-8 group">
                     <div className={`absolute -left-[9px] top-1.5 h-4 w-4 rounded-full border-4 border-white shadow-sm ${
                       act.status === 'DELIVERED' ? 'bg-emerald-500' :
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {orgs.map((org) => (
+                  {orgs.map((org: any) => (
                     <tr key={org.id} className="hover:bg-slate-50/50 transition-colors duration-200">
                       <td className="px-4 py-5 whitespace-nowrap text-sm font-bold text-slate-900">{org.name}</td>
                       <td className="px-4 py-5 whitespace-nowrap text-sm text-slate-500">
@@ -215,7 +215,7 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {auditLogs.map((log) => (
+                  {auditLogs.map((log: any) => (
                     <tr key={log.id} className="hover:bg-slate-50/50 transition-colors duration-200">
                       <td className="px-4 py-5 whitespace-nowrap text-xs font-medium text-slate-500">{new Date(log.createdAt).toLocaleString()}</td>
                       <td className="px-4 py-5 whitespace-nowrap text-sm font-bold text-slate-900">{log.action}</td>

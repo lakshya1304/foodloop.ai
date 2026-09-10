@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { Activity, AlertTriangle, Package, Utensils, Zap, Plus, Camera, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
-import { DashboardSkeleton } from '@/components/ui/Skeleton';
+
 
 export default function KitchenDashboard() {
   const [showScanModal, setShowScanModal] = useState(false);
@@ -381,6 +381,7 @@ export default function KitchenDashboard() {
                     accept="image/*" 
                     capture="environment" 
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    disabled={scanLoading}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
@@ -393,8 +394,19 @@ export default function KitchenDashboard() {
                     }}
                   />
                   {scanImage ? (
-                    <div className="relative z-0">
-                      <img src={scanImage} alt="Preview" className="mx-auto max-h-36 rounded-lg shadow-md border border-indigo-200" />
+                    <div className="relative z-0 overflow-hidden rounded-lg inline-block">
+                      <img src={scanImage} alt="Preview" className="mx-auto max-h-36 rounded-lg shadow-md border border-indigo-200 block" />
+                      {scanLoading && (
+                        <div className="absolute inset-0 z-20 pointer-events-none">
+                          <div className="w-full h-0.5 bg-indigo-500 shadow-[0_0_8px_2px_rgba(99,102,241,0.8)] animate-[scan_1.5s_ease-in-out_infinite_alternate]" style={{ animation: 'scan 1.5s ease-in-out infinite alternate' }}></div>
+                          <style>{`
+                            @keyframes scan {
+                              0% { transform: translateY(0); }
+                              100% { transform: translateY(144px); }
+                            }
+                          `}</style>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="text-indigo-500 flex flex-col items-center group-hover:scale-105 transition-transform">

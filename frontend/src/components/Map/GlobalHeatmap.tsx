@@ -2,7 +2,7 @@
 
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function GlobalHeatmap({ orgs }: { orgs: any[] }) {
   const defaultCenter: [number, number] = [28.6139, 77.2090]; // New Delhi
@@ -23,6 +23,20 @@ export default function GlobalHeatmap({ orgs }: { orgs: any[] }) {
     return [lat, lng];
   }
 
+  const [pulseRadius, setPulseRadius] = useState(0);
+
+  useEffect(() => {
+    let growing = true;
+    const interval = setInterval(() => {
+      setPulseRadius(prev => {
+        if (prev >= 6) growing = false;
+        if (prev <= 0) growing = true;
+        return prev + (growing ? 0.5 : -0.5);
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="h-[400px] w-full rounded-2xl overflow-hidden shadow-inner border border-slate-200 relative z-0">
       <MapContainer center={defaultCenter} zoom={11} className="h-full w-full">
@@ -42,7 +56,7 @@ export default function GlobalHeatmap({ orgs }: { orgs: any[] }) {
                 fillColor: isKitchen ? '#fdba74' : '#c4b5fd', 
                 fillOpacity: 0.7 
               }} 
-              radius={isKitchen ? 12 : 8}
+              radius={(isKitchen ? 12 : 8) + pulseRadius}
             >
               <Popup>
                 <strong>{org.name}</strong><br/>
