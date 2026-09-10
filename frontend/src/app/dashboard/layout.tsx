@@ -1,0 +1,105 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Leaf, LogOut, LayoutDashboard, Settings } from 'lucide-react';
+import { api } from '@/lib/api';
+import { NotificationBell } from '@/components/NotificationBell';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchUser, logout as reduxLogout } from '@/store/slices/authSlice';
+import { RootState, AppDispatch } from '@/store/store';
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { user, status } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (!user && status === 'idle') {
+      dispatch(fetchUser());
+    } else if (status === 'failed') {
+      router.push('/login');
+    }
+  }, [user, status, dispatch, router]);
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {}
+    dispatch(reduxLogout());
+    router.push('/');
+  };
+
+  if (status === 'loading' || !user) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="animate-pulse flex flex-col items-center">
+        <Leaf className="text-emerald-500 h-14 w-14 mb-6 animate-bounce drop-shadow-lg" />
+        <div className="text-emerald-600 font-bold tracking-widest uppercase text-sm">Authenticating...</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen flex bg-slate-50/50">
+      {/* Sidebar */}
+      <aside className="w-72 bg-white/80 backdrop-blur-xl border-r border-slate-100 flex flex-col hidden md:flex shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-10 relative">
+        <div className="h-20 flex items-center px-8 border-b border-slate-100">
+          <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-2 rounded-xl shadow-lg shadow-emerald-500/30 mr-3">
+            <Leaf className="text-white h-6 w-6" />
+          </div>
+          <span className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700 tracking-tight">FoodLoop</span>
+        </div>
+        
+        <div className="flex-1 py-8 px-6 space-y-2">
+          <div className="px-3 mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">Menu</div>
+          <Link href={`/dashboard/${user.role.split('_')[0].toLowerCase()}`} className="bg-emerald-50 text-emerald-700 flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 shadow-sm border border-emerald-100/50 group">
+            <LayoutDashboard className="h-5 w-5 mr-3 text-emerald-600 group-hover:scale-110 transition-transform" />
+            Dashboard
+          </Link>
+          <Link href="/dashboard/settings" className="text-slate-500 hover:bg-slate-50 hover:text-slate-900 flex items-center px-4 py-3 text-sm font-bold rounded-xl w-full text-left transition-all duration-200 group">
+            <Settings className="h-5 w-5 mr-3 text-slate-400 group-hover:rotate-45 transition-transform" />
+            Settings
+          </Link>
+        </div>
+        
+        <div className="p-6 border-t border-slate-100 bg-slate-50/30">
+          <div className="flex items-center p-3 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="ml-3 flex-1 overflow-hidden">
+              <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+              <p className="text-xs font-semibold text-slate-500 truncate tracking-wide">{user.role.replace('_', ' ')}</p>
+            </div>
+            <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors group">
+              <LogOut className="h-5 w-5 group-hover:-translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <div className="md:hidden h-16 bg-white/80 backdrop-blur-xl border-b border-slate-100 flex items-center justify-between px-4 sticky top-0 z-20">
+          <div className="flex items-center">
+            <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-1.5 rounded-lg shadow-sm mr-2">
+              <Leaf className="text-white h-5 w-5" />
+            </div>
+            <span className="text-xl font-extrabold text-slate-900 tracking-tight">FoodLoop</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <NotificationBell />
+            <button onClick={handleLogout} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}

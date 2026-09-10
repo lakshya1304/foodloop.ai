@@ -1,0 +1,227 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { api } from '@/lib/api';
+import { Users, BarChart3, TrendingDown, Factory, HeartHandshake, Banknote, Droplets, MapPin } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const GlobalHeatmap = dynamic(() => import('@/components/Map/GlobalHeatmap'), { ssr: false });
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<any>(null);
+  const [activity, setActivity] = useState<any[]>([]);
+  const [orgs, setOrgs] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [statsRes, activityRes, orgsRes, auditRes] = await Promise.all([
+          api.get('/analytics/system-overview'),
+          api.get('/analytics/activity-timeline'),
+          api.get('/analytics/organizations'),
+          api.get('/audit-logs')
+        ]);
+        setStats(statsRes.data.data);
+        setActivity(activityRes.data.data);
+        setOrgs(orgsRes.data.data);
+        setAuditLogs(auditRes.data.data || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  if (loading) return (
+    <div className="min-h-[80vh] flex items-center justify-center">
+      <div className="animate-pulse flex flex-col items-center">
+        <HeartHandshake className="text-emerald-500 h-12 w-12 mb-4 animate-bounce" />
+        <div className="text-emerald-600 font-medium tracking-wide">Loading System Analytics...</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="p-8 max-w-7xl mx-auto space-y-10 animate-fade-in-up">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">System Overview</h1>
+          <p className="text-slate-500 mt-1">Monitor the pulse of the FoodLoop network.</p>
+        </div>
+        <button className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/30 text-sm font-semibold hover:scale-105 hover:shadow-emerald-500/40 transition-all duration-300 ease-in-out">
+          Generate Full Report
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {[
+          { title: 'Total Food Rescued', value: `${stats?.totalSurplusRescued || 0} kg`, sub: 'Across all kitchens', icon: HeartHandshake, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+          { title: 'Money Saved', value: `₹${stats?.moneySaved || 0}`, sub: 'Estimated cost savings', icon: Banknote, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+          { title: 'Active Organizations', value: (stats?.activeOrgs?.KITCHEN || 0) + (stats?.activeOrgs?.NGO || 0), sub: 'Kitchens & NGOs', icon: Users, color: 'text-purple-500', bg: 'bg-purple-50' }
+        ].map((stat, i) => (
+          <div key={i} className="group relative bg-white/70 backdrop-blur-md p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-200/70 transition-all duration-300 ease-in-out overflow-hidden">
+            <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full ${stat.bg} opacity-50 group-hover:scale-150 transition-transform duration-500 ease-in-out -z-10`}></div>
+            <div className={`flex items-center gap-3 ${stat.color} mb-3`}>
+              <div className={`p-2 rounded-xl ${stat.bg}`}>
+                <stat.icon className="h-5 w-5" />
+              </div>
+              <h3 className="font-semibold text-slate-700 tracking-tight">{stat.title}</h3>
+            </div>
+            <p className="text-4xl font-extrabold text-slate-900 tracking-tight">{stat.value}</p>
+            <p className="text-sm text-slate-500 mt-2 font-medium">{stat.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        {[
+          { title: 'CO2 Prevented', value: `${stats?.co2Prevented || 0} kg`, sub: 'Environmental Impact', icon: TrendingDown, color: 'text-blue-500', bg: 'bg-blue-50' },
+          { title: 'Water Saved', value: `${stats?.waterSavedLiters || 0} L`, sub: 'Environmental Impact', icon: Droplets, color: 'text-cyan-500', bg: 'bg-cyan-50' }
+        ].map((stat, i) => (
+          <div key={i} className="group relative bg-white/70 backdrop-blur-md p-6 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-200/70 transition-all duration-300 ease-in-out overflow-hidden">
+            <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full ${stat.bg} opacity-50 group-hover:scale-150 transition-transform duration-500 ease-in-out -z-10`}></div>
+            <div className={`flex items-center gap-3 ${stat.color} mb-3`}>
+              <div className={`p-2 rounded-xl ${stat.bg}`}>
+                <stat.icon className="h-5 w-5" />
+              </div>
+              <h3 className="font-semibold text-slate-700 tracking-tight">{stat.title}</h3>
+            </div>
+            <p className="text-4xl font-extrabold text-slate-900 tracking-tight">{stat.value}</p>
+            <p className="text-sm text-slate-500 mt-2 font-medium">{stat.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-8">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 bg-slate-100 rounded-xl text-slate-600">
+              <BarChart3 className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Recent Platform Activity</h3>
+          </div>
+          <div className="space-y-6">
+            {activity.length > 0 ? (
+              <div className="relative border-l-2 border-slate-100 ml-4 space-y-8">
+                {activity.map((act) => (
+                  <div key={act.id} className="relative pl-8 group">
+                    <div className={`absolute -left-[9px] top-1.5 h-4 w-4 rounded-full border-4 border-white shadow-sm ${
+                      act.status === 'DELIVERED' ? 'bg-emerald-500' :
+                      act.status === 'ACCEPTED' ? 'bg-blue-500' :
+                      'bg-amber-500'
+                    } group-hover:scale-125 transition-transform duration-300`}></div>
+                    <p className="text-base font-bold text-slate-900">{act.title}</p>
+                    <p className="text-sm text-slate-600 mt-1 leading-relaxed">{act.description}</p>
+                    <p className="text-xs font-semibold text-slate-400 mt-2 uppercase tracking-wider">{new Date(act.timestamp).toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 bg-slate-50/50 rounded-2xl text-sm font-medium text-slate-500 text-center border border-dashed border-slate-200">
+                No recent activity found.
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-8 overflow-hidden">
+           <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-8">Registered Organizations</h3>
+           <div className="overflow-x-auto">
+            {orgs.length > 0 ? (
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Name</th>
+                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
+                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Users</th>
+                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Joined</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {orgs.map((org) => (
+                    <tr key={org.id} className="hover:bg-slate-50/50 transition-colors duration-200">
+                      <td className="px-4 py-5 whitespace-nowrap text-sm font-bold text-slate-900">{org.name}</td>
+                      <td className="px-4 py-5 whitespace-nowrap text-sm text-slate-500">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${
+                          org.type === 'KITCHEN' ? 'bg-orange-100/80 text-orange-700' :
+                          org.type === 'NGO' ? 'bg-purple-100/80 text-purple-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {org.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-5 whitespace-nowrap text-sm font-medium text-slate-600">{org._count?.users || 0}</td>
+                      <td className="px-4 py-5 whitespace-nowrap text-sm font-medium text-slate-500">{new Date(org.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-8 bg-slate-50/50 rounded-2xl text-sm font-medium text-slate-500 text-center border border-dashed border-slate-200">
+                No organizations registered yet.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-8 mt-8">
+        {/* Global Heatmap */}
+        <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-8 overflow-hidden">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 bg-orange-100 rounded-xl text-orange-600">
+              <MapPin className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Network Activity Heatmap</h3>
+            <span className="ml-auto bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full border border-slate-200">Live View</span>
+          </div>
+          <GlobalHeatmap orgs={orgs} />
+        </div>
+
+        {/* Immutable Audit Trail */}
+        <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-8 overflow-hidden">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-2 bg-indigo-100 rounded-xl text-indigo-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Immutable Audit Trail</h3>
+            <span className="ml-auto bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full border border-indigo-200">Blockchain Synced</span>
+          </div>
+          
+          <div className="overflow-x-auto">
+            {auditLogs.length > 0 ? (
+              <table className="min-w-full">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Time</th>
+                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Action</th>
+                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Entity</th>
+                    <th className="px-4 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Blockchain Hash</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {auditLogs.map((log) => (
+                    <tr key={log.id} className="hover:bg-slate-50/50 transition-colors duration-200">
+                      <td className="px-4 py-5 whitespace-nowrap text-xs font-medium text-slate-500">{new Date(log.createdAt).toLocaleString()}</td>
+                      <td className="px-4 py-5 whitespace-nowrap text-sm font-bold text-slate-900">{log.action}</td>
+                      <td className="px-4 py-5 whitespace-nowrap text-xs text-slate-500">{log.entityType} ({log.entityId.substring(0, 8)}...)</td>
+                      <td className="px-4 py-5 whitespace-nowrap text-xs font-mono text-slate-400 bg-slate-50 rounded px-2">{log.blockchainHash ? log.blockchainHash.substring(0, 16) + '...' : 'N/A'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="p-8 bg-slate-50/50 rounded-2xl text-sm font-medium text-slate-500 text-center border border-dashed border-slate-200">
+                No audit logs available yet.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
