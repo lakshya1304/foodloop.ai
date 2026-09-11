@@ -61,6 +61,15 @@ class AnalyticsController {
             return reply.status(500).send({ success: false, error: { message: 'Internal server error' } });
         }
     }
+    async getLeaderboard(request, reply) {
+        try {
+            const data = await analyticsService.getLeaderboard();
+            return reply.send({ success: true, data });
+        }
+        catch (err) {
+            return reply.status(500).send({ success: false, error: { message: 'Internal server error' } });
+        }
+    }
 }
 exports.AnalyticsController = AnalyticsController;
 //# sourceMappingURL=analytics.controller.js.map

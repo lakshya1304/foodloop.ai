@@ -14,5 +14,7 @@ async function aiRoutes(fastify) {
     });
     fastify.post('/ocr-extract', aiController.ocrExtract.bind(aiController));
     fastify.post('/demand-prediction', aiController.demandPrediction.bind(aiController));
+    fastify.post('/analyze-quality', aiController.analyzeQuality.bind(aiController));
+    fastify.get('/recommendations', aiController.getRecommendations.bind(aiController));
 }
 //# sourceMappingURL=ai.js.map

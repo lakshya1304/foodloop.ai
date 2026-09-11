@@ -26,7 +26,9 @@ class AnalyticsRepository {
             prisma.impactMetric.aggregate({
                 _sum: {
                     wastePreventedKg: true,
-                    co2eAvoidedKg: true
+                    co2eAvoidedKg: true,
+                    moneySaved: true,
+                    waterSavedLiters: true
                 }
             }),
             prisma.organization.count({ where: { type: 'KITCHEN' } }),
@@ -35,6 +37,8 @@ class AnalyticsRepository {
         return {
             totalSurplusRescued: impact._sum.wastePreventedKg || 0,
             co2Prevented: impact._sum.co2eAvoidedKg || 0,
+            moneySaved: impact._sum.moneySaved || 0,
+            waterSavedLiters: impact._sum.waterSavedLiters || 0,
             activeOrgs: {
                 KITCHEN: kitchens,
                 NGO: ngos
@@ -67,6 +71,25 @@ class AnalyticsRepository {
                 }
             }
         });
+    }
+    async getLeaderboard() {
+        const kitchens = await prisma.organization.findMany({
+            where: { type: 'KITCHEN' },
+            include: { kitchens: { include: { surpluses: true } } }
+        });
+        const ngos = await prisma.organization.findMany({
+            where: { type: 'NGO' },
+            include: { ngos: { include: { redistributions: true } } }
+        });
+        const kitchenLeaderboard = kitchens.map(org => {
+            const totalSurplus = org.kitchens.flatMap(k => k.surpluses).reduce((acc, s) => acc + s.quantitySurplus, 0);
+            return { id: org.id, name: org.name, type: 'KITCHEN', score: totalSurplus };
+        }).sort((a, b) => b.score - a.score).slice(0, 5);
+        const ngoLeaderboard = ngos.map(org => {
+            const totalReceived = org.ngos.flatMap(n => n.redistributions).reduce((acc, r) => acc + r.quantityMatched, 0);
+            return { id: org.id, name: org.name, type: 'NGO', score: totalReceived };
+        }).sort((a, b) => b.score - a.score).slice(0, 5);
+        return { kitchens: kitchenLeaderboard, ngos: ngoLeaderboard };
     }
 }
 exports.AnalyticsRepository = AnalyticsRepository;

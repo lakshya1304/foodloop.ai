@@ -9,6 +9,7 @@ export class InventoryService {
   async getInventory(user: any) {
     let kitchenId;
     if (user.role === 'KITCHEN_MANAGER') {
+      if (!user.organizationId) throw new Error('Kitchen not found for org');
       const kitchen = await prisma.kitchen.findFirst({ where: { organizationId: user.organizationId }});
       if (!kitchen) throw new Error('Kitchen not found for org');
       kitchenId = kitchen.id;
@@ -22,6 +23,7 @@ export class InventoryService {
       throw new Error('Unauthorized');
     }
 
+    if (!user.organizationId) throw new Error('Kitchen not found for org');
     const kitchen = await prisma.kitchen.findFirst({ where: { organizationId: user.organizationId }});
     if (!kitchen) throw new Error('Kitchen not found for org');
 

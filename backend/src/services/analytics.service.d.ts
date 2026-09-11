@@ -48,8 +48,8 @@ export declare class AnalyticsService {
         activeAlerts: {
             id: string;
             createdAt: Date;
-            message: string;
             title: string;
+            message: string;
             severity: string;
             isResolved: boolean;
         }[];
@@ -57,6 +57,8 @@ export declare class AnalyticsService {
     getSystemOverview(user: any): Promise<{
         totalSurplusRescued: number;
         co2Prevented: number;
+        moneySaved: number;
+        waterSavedLiters: number;
         activeOrgs: {
             KITCHEN: number;
             NGO: number;
@@ -80,5 +82,19 @@ export declare class AnalyticsService {
         createdAt: Date;
         updatedAt: Date;
     })[]>;
+    getLeaderboard(): Promise<{
+        kitchens: {
+            id: string;
+            name: string;
+            type: string;
+            score: number;
+        }[];
+        ngos: {
+            id: string;
+            name: string;
+            type: string;
+            score: number;
+        }[];
+    }>;
 }
 //# sourceMappingURL=analytics.service.d.ts.map

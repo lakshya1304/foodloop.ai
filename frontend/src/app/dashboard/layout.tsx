@@ -5,7 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Leaf, LogOut, LayoutDashboard, Settings, PackageOpen, 
-  LineChart, ShoppingCart, Truck, History, Users, Database, ShieldAlert
+  LineChart, ShoppingCart, Truck, History, Users, Database, ShieldAlert,
+  Activity, Map as MapIcon, Cpu, Heart, Camera, Bell
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -43,23 +44,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           { name: 'Dashboard', href: base, icon: LayoutDashboard },
           { name: 'Smart Inventory', href: `${base}/inventory`, icon: PackageOpen },
           { name: 'Production & Analytics', href: `${base}/production`, icon: LineChart },
+          { name: 'AI Quality Scans', href: `${base}/scans`, icon: Camera },
+          { name: 'IoT Alerts', href: `${base}/alerts`, icon: Bell },
         ];
       case 'NGO_MANAGER':
         return [
           { name: 'Dashboard', href: base, icon: LayoutDashboard },
           { name: 'Surplus Marketplace', href: `${base}/marketplace`, icon: ShoppingCart },
           { name: 'Incoming Deliveries', href: `${base}/incoming`, icon: Truck },
+          { name: 'Impact Reports', href: `${base}/impact`, icon: Heart },
+          { name: 'Volunteer Hub', href: `${base}/volunteers`, icon: Users },
         ];
       case 'DRIVER':
         return [
           { name: 'Active Route', href: base, icon: Truck },
           { name: 'Delivery History', href: `${base}/history`, icon: History },
+          { name: 'Vehicle Diagnostics', href: `${base}/diagnostics`, icon: Activity },
+          { name: 'Driver Rewards', href: `${base}/rewards`, icon: ShieldAlert },
         ];
       case 'SYSADMIN':
         return [
           { name: 'Network Overview', href: base, icon: LayoutDashboard },
           { name: 'Organizations', href: `${base}/organizations`, icon: Users },
           { name: 'Audit Trail', href: `${base}/audit`, icon: Database },
+          { name: 'AI Command Center', href: `${base}/ai-command`, icon: Cpu },
+          { name: 'Global Logistics', href: `${base}/logistics`, icon: MapIcon },
+          { name: 'System Health', href: `${base}/health`, icon: Activity },
         ];
       default:
         return [{ name: 'Dashboard', href: base, icon: LayoutDashboard }];

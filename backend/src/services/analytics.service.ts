@@ -10,6 +10,7 @@ export class AnalyticsService {
   }
 
   async getKitchenDashboard(user: any) {
+    if (!user.organizationId) throw new Error('Kitchen not found');
     const kitchen = await prisma.kitchen.findFirst({ where: { organizationId: user.organizationId }});
     if (!kitchen) throw new Error('Kitchen not found');
 

@@ -15,6 +15,10 @@ export class NgoService {
       throw new Error('Unauthorized');
     }
 
+    if (!user.organizationId) {
+      throw new Error('NGO not found');
+    }
+
     const ngo = await prisma.nGO.findFirst({ where: { organizationId: user.organizationId }});
     if (!ngo) throw new Error('NGO not found');
 
@@ -24,6 +28,10 @@ export class NgoService {
   async acceptSurplus(user: any, input: AcceptSurplusInput) {
     if (user.role !== 'NGO_STAFF') {
       throw new Error('Unauthorized');
+    }
+
+    if (!user.organizationId) {
+      throw new Error('NGO not found');
     }
 
     const ngo = await prisma.nGO.findFirst({ where: { organizationId: user.organizationId }});

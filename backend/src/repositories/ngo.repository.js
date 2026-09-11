@@ -26,6 +26,9 @@ class NgoRepository {
             const surplus = await tx.surplus.findUnique({ where: { id: surplusId } });
             if (!surplus || surplus.status !== 'AVAILABLE')
                 throw new Error('Surplus not available');
+            if (quantityRequested > surplus.quantitySurplus) {
+                throw new Error('Requested quantity exceeds available surplus');
+            }
             const newRedistribution = await tx.redistribution.create({
                 data: {
                     surplusId: surplus.id,
@@ -34,10 +37,18 @@ class NgoRepository {
                     status: 'ACCEPTED'
                 }
             });
-            await tx.surplus.update({
-                where: { id: surplus.id },
-                data: { status: 'MATCHED' }
-            });
+            if (quantityRequested < surplus.quantitySurplus) {
+                await tx.surplus.update({
+                    where: { id: surplus.id },
+                    data: { quantitySurplus: surplus.quantitySurplus - quantityRequested }
+                });
+            }
+            else {
+                await tx.surplus.update({
+                    where: { id: surplus.id },
+                    data: { status: 'MATCHED', quantitySurplus: 0 }
+                });
+            }
             // Auto-assign a random driver for hackathon demo
             const driver = await tx.driver.findFirst({ where: { isAvailable: true } });
             if (driver) {

@@ -13,7 +13,8 @@ export default function AdminDashboard() {
     queryFn: async () => {
       const res = await api.get('/analytics/system-overview');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const { data: activityRes, isLoading: loadingActivity } = useQuery({
@@ -21,7 +22,8 @@ export default function AdminDashboard() {
     queryFn: async () => {
       const res = await api.get('/analytics/activity-timeline');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const { data: orgsRes, isLoading: loadingOrgs } = useQuery({
@@ -29,7 +31,8 @@ export default function AdminDashboard() {
     queryFn: async () => {
       const res = await api.get('/analytics/organizations');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const { data: auditRes, isLoading: loadingAudit } = useQuery({
@@ -37,7 +40,8 @@ export default function AdminDashboard() {
     queryFn: async () => {
       const res = await api.get('/audit-logs');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const stats = statsRes || null;

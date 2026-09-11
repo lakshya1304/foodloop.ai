@@ -30,7 +30,8 @@ export default function KitchenDashboard() {
     queryFn: async () => {
       const res = await api.get('/analytics/kitchen-dashboard');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const { data: invRes, isLoading: loadingInv, refetch: refetchInv } = useQuery({
@@ -38,7 +39,8 @@ export default function KitchenDashboard() {
     queryFn: async () => {
       const res = await api.get('/inventory');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const { data: sensRes, isLoading: loadingSens } = useQuery({
@@ -46,7 +48,8 @@ export default function KitchenDashboard() {
     queryFn: async () => {
       const res = await api.get('/sensors');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const { data: recRes, isLoading: loadingRec } = useQuery({
@@ -54,7 +57,8 @@ export default function KitchenDashboard() {
     queryFn: async () => {
       const res = await api.get('/ai/recommendations');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const { data: leadRes, isLoading: loadingLead } = useQuery({
@@ -62,7 +66,8 @@ export default function KitchenDashboard() {
     queryFn: async () => {
       const res = await api.get('/analytics/leaderboard');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const data = dashRes ? { ...dashRes, leaderboard: leadRes } : null;

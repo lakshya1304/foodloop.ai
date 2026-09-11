@@ -36,19 +36,37 @@ export class ProductionRepository {
       const totalProduced = prods.reduce((sum, p) => sum + p.quantityProduced, 0);
 
       // 3. Calculate surplus
-      const surplusQuantity = totalProduced - quantityConsumed;
+      const totalConsumed = await tx.consumptionRecord.aggregate({
+        where: { kitchenId, foodItem, date: { gte: today } },
+        _sum: { quantityConsumed: true }
+      });
+      const sumConsumed = (totalConsumed._sum.quantityConsumed || 0);
+      const surplusQuantity = totalProduced - sumConsumed;
+      
       let surplus = null;
 
       if (surplusQuantity > 0) {
-        surplus = await tx.surplus.create({
-          data: {
-            kitchenId,
-            foodItem,
-            quantitySurplus: surplusQuantity,
-            unit,
-            status: 'AVAILABLE'
-          }
+        // Find existing surplus for today
+        const existingSurplus = await tx.surplus.findFirst({
+          where: { kitchenId, foodItem, date: { gte: today }, status: 'AVAILABLE' }
         });
+
+        if (existingSurplus) {
+          surplus = await tx.surplus.update({
+            where: { id: existingSurplus.id },
+            data: { quantitySurplus: surplusQuantity }
+          });
+        } else {
+          surplus = await tx.surplus.create({
+            data: {
+              kitchenId,
+              foodItem,
+              quantitySurplus: surplusQuantity,
+              unit,
+              status: 'AVAILABLE'
+            }
+          });
+        }
       }
 
       return { consumption: cons, surplus };

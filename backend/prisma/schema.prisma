@@ -37,6 +37,8 @@ model User {
   refreshTokens  RefreshToken[]
   passkeys       Passkey[]
   oauthAccounts  OAuthAccount[]
+
+  @@index([email])
 }
 
 model RefreshToken {
@@ -128,6 +130,9 @@ model InventoryItem {
   status           String    @default("SAFE") // SAFE, EXPIRING_SOON, EXPIRED, LOW_STOCK, OUT_OF_STOCK, QUALITY_WARNING
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
+
+  @@index([kitchenId])
+  @@index([expiryDate])
 }
 
 model ProductionRecord {
@@ -161,6 +166,9 @@ model Surplus {
   status           String   @default("AVAILABLE") // AVAILABLE, MATCHED, REDISTRIBUTED, EXPIRED
 
   redistributions  Redistribution[]
+
+  @@index([kitchenId])
+  @@index([status])
 }
 
 model DemandPrediction {
@@ -188,6 +196,8 @@ model Redistribution {
   updatedAt        DateTime @updatedAt
 
   delivery         Delivery?
+
+  @@index([status])
 }
 
 model Delivery {
@@ -201,6 +211,9 @@ model Delivery {
   status           String   @default("PENDING") // PENDING, ASSIGNED, PICKED_UP, IN_TRANSIT, DELIVERED
   
   route            Route?
+
+  @@index([status])
+  @@index([driverId])
 }
 
 model Route {
@@ -231,6 +244,8 @@ model SensorReading {
   value            Float
   timestamp        DateTime @default(now())
   isAlertTriggered Boolean  @default(false)
+
+  @@index([sensorId])
 }
 
 model Alert {
@@ -267,6 +282,8 @@ model Notification {
   message          String
   read             Boolean  @default(false)
   createdAt        DateTime @default(now())
+
+  @@index([userId])
 }
 
 model AuditLog {

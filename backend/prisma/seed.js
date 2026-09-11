@@ -22,6 +22,10 @@ async function main() {
     await prisma.driver.deleteMany();
     await prisma.nGO.deleteMany();
     await prisma.kitchen.deleteMany();
+    await prisma.auditLog.deleteMany();
+    await prisma.refreshToken.deleteMany();
+    await prisma.passkey.deleteMany();
+    await prisma.oAuthAccount.deleteMany();
     await prisma.user.deleteMany();
     await prisma.organization.deleteMany();
     const passwordHash = await bcrypt.hash('password123', 10);
@@ -90,6 +94,34 @@ async function main() {
     // Impact
     await prisma.impactMetric.create({
         data: { date: today, wastePreventedKg: 35, mealsSaved: 70, co2eAvoidedKg: 87.5, waterSavedLiters: 4200, moneySaved: 140 }
+    });
+    // Sensors and IoT
+    const sensor = await prisma.sensor.create({
+        data: { kitchenId: kitchen1.id, name: 'Cold Storage A', type: 'TEMPERATURE', location: 'Main Refrigerator', status: 'ACTIVE' }
+    });
+    await prisma.sensorReading.createMany({
+        data: [
+            { sensorId: sensor.id, value: 4.2, timestamp: new Date(today.getTime() - 3600000), isAlertTriggered: false },
+            { sensorId: sensor.id, value: 11.8, timestamp: today, isAlertTriggered: true }
+        ]
+    });
+    await prisma.alert.create({
+        data: { title: 'High Temperature Detected', message: 'Cold Storage A is at 11.8°C (Threshold 5°C)', severity: 'CRITICAL' }
+    });
+    // AI Recommendations
+    await prisma.aIRecommendation.createMany({
+        data: [
+            { title: 'Reduce Lunch Production', description: 'Reduce tomorrow\'s lunch production by 8% based on historical drop off.', createdAt: today },
+            { title: 'Expiring Inventory', description: '20L of Milk expiring in 2 days. Prioritize use.', createdAt: today }
+        ]
+    });
+    // Notifications
+    await prisma.notification.createMany({
+        data: [
+            { userId: kitchenManager.id, title: 'Surplus Matched', message: 'Your surplus of 80 meals has been matched with Hope Food Bank.', read: false },
+            { userId: kitchenManager.id, title: 'IoT Alert', message: 'Cold Storage A temperature critical: 11.8°C.', read: false },
+            { userId: adminUser.id, title: 'System Alert', message: 'New user registered for Community Care.', read: false }
+        ]
     });
     console.log("Database seeded successfully!");
 }

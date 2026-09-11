@@ -8,6 +8,9 @@ const ngos_1 = require("./ngos");
 const deliveries_1 = require("./deliveries");
 const ai_1 = require("./ai");
 const production_1 = require("./production");
+const notifications_1 = require("./notifications");
+const sensors_1 = require("./sensors");
+const audit_1 = require("./audit");
 async function routes(fastify) {
     fastify.register(auth_1.default, { prefix: '/auth' });
     fastify.register(inventory_1.default, { prefix: '/inventory' });
@@ -16,5 +19,8 @@ async function routes(fastify) {
     fastify.register(deliveries_1.default, { prefix: '/deliveries' });
     fastify.register(ai_1.default, { prefix: '/ai' });
     fastify.register(production_1.default, { prefix: '/production' });
+    fastify.register(notifications_1.default, { prefix: '/notifications' });
+    fastify.register(sensors_1.default, { prefix: '/sensors' });
+    fastify.register(audit_1.default, { prefix: '/audit-logs' });
 }
 //# sourceMappingURL=index.js.map

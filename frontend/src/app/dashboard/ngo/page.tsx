@@ -12,7 +12,8 @@ export default function NgoDashboard() {
     queryFn: async () => {
       const res = await api.get('/ngos/available-surplus');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const { data: statsRes, isLoading: loadingStats, refetch: refetchStats } = useQuery({
@@ -20,7 +21,8 @@ export default function NgoDashboard() {
     queryFn: async () => {
       const res = await api.get('/ngos/dashboard-stats');
       return res.data.data;
-    }
+    },
+    refetchInterval: 3000
   });
 
   const surpluses = surplusRes || [];

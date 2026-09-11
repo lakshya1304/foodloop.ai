@@ -8,6 +8,7 @@ const helmet_1 = require("@fastify/helmet");
 const cookie_1 = require("@fastify/cookie");
 const compress_1 = require("@fastify/compress");
 const routes_1 = require("./routes");
+const auth_1 = require("./plugins/auth");
 const server = (0, fastify_1.default)({ logger: true });
 const prisma = new client_1.PrismaClient();
 server.register(helmet_1.default, { global: true });
@@ -33,6 +34,7 @@ server.register(jwt_1.default, {
         signed: false
     }
 });
+server.register(auth_1.default);
 server.register(routes_1.default, { prefix: '/api' });
 // Basic check
 server.get('/health', async (request, reply) => {

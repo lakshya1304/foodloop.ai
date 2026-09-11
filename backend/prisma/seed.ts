@@ -22,6 +22,11 @@ async function main() {
   await prisma.driver.deleteMany();
   await prisma.nGO.deleteMany();
   await prisma.kitchen.deleteMany();
+  await prisma.auditLog.deleteMany();
+  await prisma.refreshToken.deleteMany();
+  await prisma.passkey.deleteMany();
+  await prisma.oAuthAccount.deleteMany();
+  
   await prisma.user.deleteMany();
   await prisma.organization.deleteMany();
 

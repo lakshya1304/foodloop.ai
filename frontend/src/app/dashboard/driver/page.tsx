@@ -22,7 +22,8 @@ export default function DriverDashboard() {
         ngo: d.redistribution.ngo,
         routeOptimized: d.calculatedRoute
       }));
-    }
+    },
+    refetchInterval: 3000
   });
 
   const tasks = tasksRes || [];

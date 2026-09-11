@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -13,7 +13,7 @@ export class AuditService {
         entityId: data.entityId,
         entityType: data.entityType,
         action: data.action,
-        actorId: data.actorId,
+        actorId: data.actorId ?? null,
         details: data.details ? JSON.stringify(data.details) : null,
         blockchainHash
       }

@@ -35,6 +35,30 @@ class AiController {
             return reply.status(500).send({ success: false, error: { message: err.message || 'Error' } });
         }
     }
+    async analyzeQuality(request, reply) {
+        try {
+            // Need to import analyzeQualitySchema, will update this
+            const { analyzeQualitySchema } = require('../schemas/ai.schema');
+            const body = analyzeQualitySchema.parse(request.body);
+            const data = await aiService.analyzeQuality(body);
+            return reply.send({ success: true, data });
+        }
+        catch (err) {
+            if (err instanceof zod_1.z.ZodError) {
+                return reply.status(400).send({ success: false, error: { message: err.issues } });
+            }
+            return reply.status(500).send({ success: false, error: { message: err.message || 'Error' } });
+        }
+    }
+    async getRecommendations(request, reply) {
+        try {
+            const data = await aiService.getRecommendations();
+            return reply.send({ success: true, data });
+        }
+        catch (err) {
+            return reply.status(500).send({ success: false, error: { message: err.message || 'Error' } });
+        }
+    }
 }
 exports.AiController = AiController;
 //# sourceMappingURL=ai.controller.js.map

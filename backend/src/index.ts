@@ -7,6 +7,7 @@ import cookie from '@fastify/cookie';
 import compress from '@fastify/compress';
 
 import routes from './routes';
+import authPlugin from './plugins/auth';
 
 const server = fastify({ logger: true });
 const prisma = new PrismaClient();
@@ -39,6 +40,8 @@ server.register(jwt, {
     signed: false
   }
 });
+
+server.register(authPlugin);
 
 server.register(routes, { prefix: '/api' });
 

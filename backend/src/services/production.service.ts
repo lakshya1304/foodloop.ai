@@ -7,6 +7,7 @@ const prodRepo = new ProductionRepository();
 
 export class ProductionService {
   async recordProduction(user: any, input: ProdInput) {
+    if (!user.organizationId) throw new Error('Kitchen not found');
     const kitchen = await prisma.kitchen.findFirst({ where: { organizationId: user.organizationId }});
     if (!kitchen) throw new Error('Kitchen not found');
 
@@ -14,6 +15,7 @@ export class ProductionService {
   }
 
   async consumeAndCalculateSurplus(user: any, input: ConsInput) {
+    if (!user.organizationId) throw new Error('Kitchen not found');
     const kitchen = await prisma.kitchen.findFirst({ where: { organizationId: user.organizationId }});
     if (!kitchen) throw new Error('Kitchen not found');
 

@@ -17,5 +17,6 @@ async function analyticsRoutes(fastify) {
     fastify.get('/system-overview', analyticsController.getSystemOverview.bind(analyticsController));
     fastify.get('/activity-timeline', analyticsController.getActivityTimeline.bind(analyticsController));
     fastify.get('/organizations', analyticsController.getOrganizations.bind(analyticsController));
+    fastify.get('/leaderboard', analyticsController.getLeaderboard.bind(analyticsController));
 }
 //# sourceMappingURL=analytics.js.map
