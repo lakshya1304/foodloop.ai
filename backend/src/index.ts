@@ -10,6 +10,7 @@ import { z } from 'zod';
 
 import routes from './routes';
 import authPlugin from './plugins/auth';
+import { setupSocket } from './socket';
 
 const server = fastify({ logger: true });
 const prisma = new PrismaClient();
@@ -88,6 +89,8 @@ server.setErrorHandler((error, request, reply) => {
 
 const start = async () => {
   try {
+    await server.ready();
+    setupSocket(server);
     await server.listen({ port: Number(process.env.PORT) || 3001, host: '0.0.0.0' });
     server.log.info(`Server running on port ${process.env.PORT || 3001}`);
   } catch (err) {

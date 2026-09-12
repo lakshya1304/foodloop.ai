@@ -1,5 +1,6 @@
 import { DeliveryRepository } from '../repositories/delivery.repository';
 import { DeliveryStatusInput } from '../schemas/delivery.schema';
+import { io } from '../socket';
 
 const deliveryRepo = new DeliveryRepository();
 
@@ -52,6 +53,20 @@ export class DeliveryService {
   }
 
   async updateDeliveryStatus(deliveryId: string, input: DeliveryStatusInput) {
-    return deliveryRepo.updateDeliveryStatusTransaction(deliveryId, input.status);
+    const result = await deliveryRepo.updateDeliveryStatusTransaction(deliveryId, input.status);
+    
+    if (io) {
+      io.emit('delivery_updated', { deliveryId, status: input.status });
+      io.to('role_ADMIN').emit('notification', { 
+        title: 'Logistics Update', 
+        message: `Delivery ${deliveryId.substring(0, 8)} status changed to ${input.status}` 
+      });
+      io.to('role_NGO_STAFF').emit('notification', { 
+        title: 'Delivery Update', 
+        message: `Your incoming delivery status changed to ${input.status}` 
+      });
+    }
+    
+    return result;
   }
 }
