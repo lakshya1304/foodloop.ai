@@ -5,11 +5,7 @@ const auditService = new AuditService();
 
 export class AuditController {
   async getAuditLogs(request: FastifyRequest, reply: FastifyReply) {
-    try {
-      const data = await auditService.getAuditLogs();
-      return reply.send({ success: true, data });
-    } catch (err: any) {
-      return reply.status(500).send({ success: false, error: { message: 'Internal server error' } });
-    }
+    const data = await auditService.getAuditLogs();
+    return reply.send({ success: true, data });
   }
 }

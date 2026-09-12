@@ -64,13 +64,13 @@ export declare class AnalyticsService {
             NGO: number;
         };
     }>;
-    getActivityTimeline(user: any): Promise<{
+    getActivityTimeline(user: any): Promise<({
         id: string;
         title: string;
         description: string;
         status: string;
         timestamp: Date;
-    }[]>;
+    } | undefined)[]>;
     getOrganizations(user: any): Promise<({
         _count: {
             users: number;

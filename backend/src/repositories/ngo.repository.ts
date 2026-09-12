@@ -59,7 +59,7 @@ export class NgoRepository {
           data: {
             redistributionId: newRedistribution.id,
             driverId: driver.id,
-            status: 'ASSIGNED'
+            status: 'PENDING'
           }
         });
       } else {

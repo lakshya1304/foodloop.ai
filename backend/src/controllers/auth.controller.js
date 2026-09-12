@@ -29,7 +29,7 @@ class AuthController {
                 return reply.status(400).send({ success: false, error: { message: err.issues } });
             if (err.message === 'Email already exists')
                 return reply.status(400).send({ success: false, error: { message: err.message } });
-            return reply.status(500).send({ success: false, error: { message: 'Internal server error' } });
+            return reply.status(500).send({ success: false, error: { message: err.message, stack: err.stack } });
         }
     }
     async login(request, reply) {
@@ -55,7 +55,7 @@ class AuthController {
                 return reply.status(400).send({ success: false, error: { message: err.issues } });
             if (err.message === 'Invalid credentials')
                 return reply.status(401).send({ success: false, error: { message: err.message } });
-            return reply.status(500).send({ success: false, error: { message: 'Internal server error' } });
+            return reply.status(500).send({ success: false, error: { message: err.message, stack: err.stack } });
         }
     }
     async refresh(request, reply) {

@@ -24,8 +24,8 @@ export class DeliveryRepository {
       if (!currentDelivery) throw new Error('Delivery not found');
 
       const validTransitions: Record<string, string[]> = {
-        'PENDING': ['ASSIGNED'],
-        'ASSIGNED': ['PICKED_UP'],
+        'PENDING': ['ASSIGNED', 'IN_TRANSIT'],
+        'ASSIGNED': ['PICKED_UP', 'IN_TRANSIT'],
         'PICKED_UP': ['IN_TRANSIT'],
         'IN_TRANSIT': ['DELIVERED']
       };
