@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { Activity, AlertTriangle, Package, Utensils, Zap, Plus, Camera, Loader2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
+import { useSocket } from '@/components/SocketProvider';
 
 
 export default function KitchenDashboard() {
@@ -30,8 +31,7 @@ export default function KitchenDashboard() {
     queryFn: async () => {
       const res = await api.get('/analytics/kitchen-dashboard');
       return res.data.data;
-    },
-    refetchInterval: 3000
+    }
   });
 
   const { data: invRes, isLoading: loadingInv, refetch: refetchInv } = useQuery({
@@ -39,8 +39,7 @@ export default function KitchenDashboard() {
     queryFn: async () => {
       const res = await api.get('/inventory');
       return res.data.data;
-    },
-    refetchInterval: 3000
+    }
   });
 
   const { data: sensRes, isLoading: loadingSens } = useQuery({
@@ -48,8 +47,7 @@ export default function KitchenDashboard() {
     queryFn: async () => {
       const res = await api.get('/sensors');
       return res.data.data;
-    },
-    refetchInterval: 3000
+    }
   });
 
   const { data: recRes, isLoading: loadingRec } = useQuery({
@@ -57,8 +55,7 @@ export default function KitchenDashboard() {
     queryFn: async () => {
       const res = await api.get('/ai/recommendations');
       return res.data.data;
-    },
-    refetchInterval: 3000
+    }
   });
 
   const { data: leadRes, isLoading: loadingLead } = useQuery({
@@ -66,9 +63,22 @@ export default function KitchenDashboard() {
     queryFn: async () => {
       const res = await api.get('/analytics/leaderboard');
       return res.data.data;
-    },
-    refetchInterval: 3000
+    }
   });
+
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleUpdate = () => {
+      refetchDash();
+      refetchInv();
+    };
+    socket.on('surplus_updated', handleUpdate);
+    return () => {
+      socket.off('surplus_updated', handleUpdate);
+    };
+  }, [socket, refetchDash, refetchInv]);
 
   const data = dashRes ? { ...dashRes, leaderboard: leadRes } : null;
   const inventory = invRes || [];

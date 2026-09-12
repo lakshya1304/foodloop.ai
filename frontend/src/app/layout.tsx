@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import 'leaflet/dist/leaflet.css';
 import { ReduxProvider } from '@/components/ReduxProvider';
+import { SocketProvider } from '@/components/SocketProvider';
 import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -23,7 +25,9 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <ReduxProvider>
           <QueryProvider>
-            {children}
+            <SocketProvider>
+              {children}
+            </SocketProvider>
             <Toaster position="bottom-right" richColors closeButton />
           </QueryProvider>
         </ReduxProvider>

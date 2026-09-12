@@ -47,7 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           { name: 'AI Quality Scans', href: `${base}/scans`, icon: Camera },
           { name: 'IoT Alerts', href: `${base}/alerts`, icon: Bell },
         ];
-      case 'NGO_MANAGER':
+      case 'NGO_STAFF':
         return [
           { name: 'Dashboard', href: base, icon: LayoutDashboard },
           { name: 'Surplus Marketplace', href: `${base}/marketplace`, icon: ShoppingCart },
@@ -62,7 +62,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           { name: 'Vehicle Diagnostics', href: `${base}/diagnostics`, icon: Activity },
           { name: 'Driver Rewards', href: `${base}/rewards`, icon: ShieldAlert },
         ];
-      case 'SYSADMIN':
+      case 'ADMIN':
         return [
           { name: 'Network Overview', href: base, icon: LayoutDashboard },
           { name: 'Organizations', href: `${base}/organizations`, icon: Users },

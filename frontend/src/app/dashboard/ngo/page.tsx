@@ -1,10 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { CheckCircle2, MapPin, Package, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
+import { useSocket } from '@/components/SocketProvider';
 
 export default function NgoDashboard() {
   const { data: surplusRes, isLoading: loadingSurplus, refetch: refetchSurplus } = useQuery({
@@ -12,8 +14,7 @@ export default function NgoDashboard() {
     queryFn: async () => {
       const res = await api.get('/ngos/available-surplus');
       return res.data.data;
-    },
-    refetchInterval: 3000
+    }
   });
 
   const { data: statsRes, isLoading: loadingStats, refetch: refetchStats } = useQuery({
@@ -21,9 +22,22 @@ export default function NgoDashboard() {
     queryFn: async () => {
       const res = await api.get('/ngos/dashboard-stats');
       return res.data.data;
-    },
-    refetchInterval: 3000
+    }
   });
+
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleUpdate = () => {
+      refetchSurplus();
+      refetchStats();
+    };
+    socket.on('surplus_updated', handleUpdate);
+    return () => {
+      socket.off('surplus_updated', handleUpdate);
+    };
+  }, [socket, refetchSurplus, refetchStats]);
 
   const surpluses = surplusRes || [];
   const stats = statsRes || { acceptedToday: 0, pendingArrival: 0 };

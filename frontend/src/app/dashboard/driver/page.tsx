@@ -6,6 +6,8 @@ import { Navigation, MapPin, CheckCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import dynamic from 'next/dynamic';
+import { useSocket } from '@/components/SocketProvider';
+import { useEffect } from 'react';
 
 const RouteMap = dynamic(() => import('@/components/Map/RouteMap'), { ssr: false });
 
@@ -22,9 +24,21 @@ export default function DriverDashboard() {
         ngo: d.redistribution.ngo,
         routeOptimized: d.calculatedRoute
       }));
-    },
-    refetchInterval: 3000
+    }
   });
+
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleUpdate = () => {
+      refetch();
+    };
+    socket.on('delivery_updated', handleUpdate);
+    return () => {
+      socket.off('delivery_updated', handleUpdate);
+    };
+  }, [socket, refetch]);
 
   const tasks = tasksRes || [];
 
