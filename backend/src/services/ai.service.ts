@@ -9,66 +9,16 @@ const ai = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GE
 const cache = new Map<string, any>();
 
 export class AiService {
-  async ocrExtract(input: OcrInput) {
-    if (!ai) {
-      // Highly advanced deterministic demo fallback
-      const foods = ['Tomato Paste', 'Whole Wheat Bread', 'Lentil Soup Base', 'Fresh Milk', 'Cheddar Cheese', 'Mixed Vegetables', 'Chicken Broth'];
-      const randomFood = foods[Math.floor(Math.random() * foods.length)];
-      
-      const isExpiringSoon = Math.random() > 0.5;
-      const daysToExpiry = isExpiringSoon ? Math.floor(Math.random() * 3) + 1 : Math.floor(Math.random() * 14) + 7;
-      
-      const mfgDate = new Date();
-      mfgDate.setDate(mfgDate.getDate() - Math.floor(Math.random() * 30) - 5);
-      
-      const expDate = new Date();
-      expDate.setDate(expDate.getDate() + daysToExpiry);
-
-      const batch = `B-${Math.floor(Math.random() * 9000) + 1000}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
-
-      // Simulate network delay to make the UI "live scanning" feel real
-      await new Promise(resolve => setTimeout(resolve, 2500));
-
-      return {
-        product_name: randomFood,
-        manufacturing_date: mfgDate.toISOString(),
-        expiry_date: expDate.toISOString(),
-        batch_number: batch
-      };
-    }
-
-    const cacheKey = `ocr-${input.text || ''}-${input.imageParts?.length || 0}`;
-    if (cache.has(cacheKey)) return cache.get(cacheKey);
-
-    const prompt = `You are a food logistics AI. Extract the following information from the provided product label text or image:
-      1. product_name
-      2. manufacturing_date (ISO 8601 string)
-      3. expiry_date (ISO 8601 string)
-      4. batch_number
-      Return ONLY a JSON object with these keys. If a value is not found, return null for it.
-      
-      Label Text: ${input.text || 'Not provided'}
-      `;
-
-    const contents: any[] = [prompt];
-    if (input.imageParts && input.imageParts.length > 0) {
-      contents.push(...input.imageParts);
-    }
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: contents,
-      config: {
-        responseMimeType: "application/json",
-      }
-    });
+  async ocrExtract(fileBuffer: Buffer, filename: string, mimeType: string) {
+    const { OcrProvider } = require('./providers/ocr.provider');
+    const provider = new OcrProvider();
     
-    if (!response.text) {
-        throw new Error("No text returned from Gemini");
+    // Call the Python OCR service
+    const result = await provider.extractLabel(fileBuffer, filename, mimeType);
+    if (!result.success) {
+      throw new Error(result.error?.message || "OCR Extraction Failed");
     }
-    const result = JSON.parse(response.text);
-    cache.set(cacheKey, result);
-    return result;
+    return result.data;
   }
 
   async demandPrediction(input: DemandPredictionInput) {
@@ -134,33 +84,11 @@ export class AiService {
 
   async analyzeQuality(input: AnalyzeQualityInput) {
     if (!ai) {
-      const statuses = ["SAFE", "WARNING", "SPOILED", "SAFE"];
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      
-      let issues = [];
-      let recommendation = "";
-      let confidence = Math.random() * 0.3 + 0.6; // 0.6 to 0.9
-
-      if (status === "SAFE") {
-        issues = ["No visible signs of spoilage", "Coloration is optimal"];
-        recommendation = "Approved for distribution.";
-        confidence += 0.05;
-      } else if (status === "WARNING") {
-        issues = ["Slight discoloration on edges", "Texture appears slightly soft"];
-        recommendation = "Use immediately. Do not store for more than 12 hours.";
-      } else {
-        issues = ["Visible mold patches detected", "Severe discoloration"];
-        recommendation = "Discard immediately. Unsafe for consumption.";
-        confidence += 0.1;
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate deep analysis
-
       return {
-        quality_status: status,
-        visible_issues: issues,
-        confidence: Math.min(confidence, 0.99),
-        recommendation: recommendation
+        quality_status: "REVIEW_REQUIRED",
+        visible_issues: [],
+        confidence: 0,
+        recommendation: "Manual inspection required. Vision AI is currently unavailable."
       };
     }
 
@@ -182,7 +110,27 @@ export class AiService {
         throw new Error("No response from AI");
     }
 
-    return JSON.parse(response.text);
+    const aiResult = JSON.parse(response.text);
+
+    // Persist scan to database
+    await prisma.aiScan.create({
+      data: {
+        item: aiResult.visible_issues && aiResult.visible_issues.length > 0 ? "Scanned Food Item" : "Safe Food Item",
+        confidence: aiResult.confidence,
+        status: aiResult.quality_status === "SAFE" ? "PASS" : "WARN",
+        issues: JSON.stringify(aiResult.visible_issues),
+        recommendation: aiResult.recommendation
+      }
+    });
+
+    return aiResult;
+  }
+
+  async getScans() {
+    return prisma.aiScan.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
   }
 
   async getRecommendations(kitchenId?: string) {

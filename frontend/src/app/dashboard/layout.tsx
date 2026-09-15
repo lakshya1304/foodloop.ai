@@ -3,8 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Leaf, LogOut, LayoutDashboard, Settings, PackageOpen, 
+import {
+  Leaf, LogOut, LayoutDashboard, Settings, PackageOpen,
   LineChart, ShoppingCart, Truck, History, Users, Database, ShieldAlert,
   Activity, Map as MapIcon, Cpu, Heart, Camera, Bell
 } from 'lucide-react';
@@ -31,14 +31,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const handleLogout = async () => {
     try {
       await api.post('/auth/logout');
-    } catch (err) {}
+    } catch (err) { }
     dispatch(reduxLogout());
     router.push('/');
   };
 
   const getNavLinks = (role: string) => {
     const base = `/dashboard/${role.split('_')[0].toLowerCase()}`;
-    switch(role) {
+    switch (role) {
       case 'KITCHEN_MANAGER':
         return [
           { name: 'Dashboard', href: base, icon: LayoutDashboard },
@@ -91,30 +91,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen flex bg-slate-50/50">
       {/* Sidebar */}
       <aside className="w-72 bg-white/80 backdrop-blur-xl border-r border-slate-100 flex flex-col hidden md:flex shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-10 relative">
-        <div className="h-20 flex items-center px-8 border-b border-slate-100">
-          <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-2 rounded-xl shadow-lg shadow-emerald-500/30 mr-3">
-            <Leaf className="text-white h-6 w-6" />
+        <div className="h-20 flex items-center px-6 border-b border-slate-100 overflow-hidden">
+          <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-2 rounded-xl shadow-lg shadow-emerald-500/30 mr-3 flex-shrink-0">
+            <Leaf className="text-white h-5 w-5" />
           </div>
-          <span className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700 tracking-tight">FoodLoop</span>
+          <span className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700 tracking-tight flex items-baseline gap-1.5 whitespace-nowrap overflow-hidden text-ellipsis">FoodLoop AI <span className="text-[9px] font-bold text-slate-500 tracking-widest uppercase mt-0.5">Minimal-Waste Platform</span></span>
         </div>
-        
+
         <div className="flex-1 py-8 px-6 space-y-2">
           <div className="px-3 mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">Menu</div>
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
-              <Link 
+              <Link
                 key={link.name}
-                href={link.href} 
-                className={`flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group ${
-                  isActive 
-                  ? 'bg-emerald-50 text-emerald-700 shadow-sm border border-emerald-100/50' 
+                href={link.href}
+                className={`flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group ${isActive
+                  ? 'bg-emerald-50 text-emerald-700 shadow-sm border border-emerald-100/50'
                   : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
-                }`}
+                  }`}
               >
-                <link.icon className={`h-5 w-5 mr-3 transition-transform ${
-                  isActive ? 'text-emerald-600 group-hover:scale-110' : 'text-slate-400 group-hover:-rotate-12'
-                }`} />
+                <link.icon className={`h-5 w-5 mr-3 transition-transform ${isActive ? 'text-emerald-600 group-hover:scale-110' : 'text-slate-400 group-hover:-rotate-12'
+                  }`} />
                 {link.name}
               </Link>
             )
@@ -125,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             Settings
           </Link>
         </div>
-        
+
         <div className="p-6 border-t border-slate-100 bg-slate-50/30">
           <div className="flex items-center p-3 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">
@@ -149,7 +147,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-1.5 rounded-lg shadow-sm mr-2">
               <Leaf className="text-white h-5 w-5" />
             </div>
-            <span className="text-xl font-extrabold text-slate-900 tracking-tight">FoodLoop</span>
+            <span className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700 tracking-tight flex items-baseline gap-1">FoodLoop AI <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase hidden sm:inline">Minimal-Waste Platform</span></span>
           </div>
           <div className="flex items-center space-x-2">
             <NotificationBell />
@@ -158,7 +156,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
           </div>
         </div>
-        
+
         <div className="flex-1 overflow-y-auto">
           {children}
         </div>

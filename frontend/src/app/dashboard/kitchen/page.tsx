@@ -88,25 +88,24 @@ export default function KitchenDashboard() {
   const loading = loadingDash || loadingInv;
 
   const handleScan = async () => {
-    if (!scanText && !scanImage) {
-      toast.error('Please provide text or an image');
+    if (!scanImage) {
+      toast.error('Please capture or upload an image');
       return;
     }
     setScanLoading(true);
     try {
-      const payload: any = {};
-      if (scanText) payload.text = scanText;
-      if (scanImage) {
-        const [meta, imgData] = scanImage.split(',');
-        const mimeType = meta.match(/:(.*?);/)?.[1] || 'image/jpeg';
-        payload.imageParts = [{ inlineData: { data: imgData, mimeType } }];
-      }
+      // Create a blob from the data url
+      const resBlob = await fetch(scanImage);
+      const blob = await resBlob.blob();
       
-      const res = await api.post('/ai/ocr-extract', payload);
+      const formData = new FormData();
+      formData.append('file', blob, 'scan.jpg');
+      
+      const res = await api.post('/ai/ocr-extract', formData);
       setScanResult(res.data.data);
       setQualityResult(null);
-    } catch (err) {
-      toast.error('Error extracting data. Please try again.');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error extracting data. Please try again.');
     } finally {
       setScanLoading(false);
     }
@@ -135,11 +134,20 @@ export default function KitchenDashboard() {
 
   const handleSaveInventory = async () => {
     if (!scanResult) return;
+    
+    // Quick validation
+    if (scanResult.manufacturing_date && scanResult.expiry_date) {
+      if (new Date(scanResult.manufacturing_date) > new Date(scanResult.expiry_date)) {
+        toast.error("Manufacturing date cannot be after expiry date!");
+        return;
+      }
+    }
+    
     try {
       await api.post('/inventory', {
         productName: scanResult.product_name || 'Unknown',
-        category: 'Dairy',
-        quantity: 1,
+        category: 'General', // Removed hardcoded Dairy
+        quantity: 1, 
         unit: 'item',
         batchNumber: scanResult.batch_number,
         manufacturingDate: scanResult.manufacturing_date,
@@ -149,8 +157,8 @@ export default function KitchenDashboard() {
       setShowScanModal(false);
       setScanResult(null);
       refetchInv();
-    } catch (err) {
-      toast.error('Failed to save inventory');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to save inventory');
     }
   };
 

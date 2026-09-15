@@ -1,14 +1,14 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/audit-client';
 import * as crypto from 'crypto';
 
-const prisma = new PrismaClient();
+const prismaAudit = new PrismaClient();
 
 export class AuditService {
   async logAction(data: { entityId: string, entityType: string, action: string, actorId?: string, details?: any }) {
     const hashData = JSON.stringify(data) + new Date().toISOString();
     const blockchainHash = crypto.createHash('sha256').update(hashData).digest('hex');
 
-    return prisma.auditLog.create({
+    return prismaAudit.auditLog.create({
       data: {
         entityId: data.entityId,
         entityType: data.entityType,
@@ -21,7 +21,7 @@ export class AuditService {
   }
 
   async getAuditLogs() {
-    return prisma.auditLog.findMany({
+    return prismaAudit.auditLog.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50
     });

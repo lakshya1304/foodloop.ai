@@ -6,28 +6,50 @@ import { api } from '@/lib/api';
 import Link from 'next/link';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '@/store/slices/authSlice';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Leaf, Lock, Mail, Sparkles, CheckCircle2, XCircle } from 'lucide-react';
+
+// Strong password regex — must match backend auth.schema.ts
+const STRONG_PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+interface PasswordRule {
+  label: string;
+  test: (pw: string) => boolean;
+}
+
+const PASSWORD_RULES: PasswordRule[] = [
+  { label: 'At least 8 characters',        test: (pw) => pw.length >= 8 },
+  { label: 'One uppercase letter (A–Z)',    test: (pw) => /[A-Z]/.test(pw) },
+  { label: 'One lowercase letter (a–z)',    test: (pw) => /[a-z]/.test(pw) },
+  { label: 'One digit (0–9)',               test: (pw) => /\d/.test(pw) },
+  { label: 'One special character (!@#…)',  test: (pw) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pw) },
+];
 
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const [email, setEmail] = useState('manager@cityuni.edu');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('admin@admin.com');
+  const [password, setPassword] = useState('Qwertyui12345678@');
   const [showPassword, setShowPassword] = useState(false);
+  const [showStrength, setShowStrength] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!STRONG_PASSWORD_REGEX.test(password)) {
+      setError('Password must include uppercase, lowercase, a number, and a special character (min 8 chars).');
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await api.post('/auth/login', { email, password });
       if (res.data.success) {
-        // Update Redux state
         dispatch(setCredentials({ user: res.data.data.user }));
-        
-        // Redirect based on role
+
         const role = res.data.data.user.role;
         if (role === 'KITCHEN_MANAGER') router.push('/dashboard/kitchen');
         else if (role === 'NGO_STAFF') router.push('/dashboard/ngo');
@@ -36,72 +58,164 @@ export default function LoginPage() {
         else router.push('/dashboard');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error?.message || 'Failed to login');
+      setError(err.response?.data?.error?.message || 'Failed to login. Please check credentials.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to FoodLoop
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Hackathon Demo Credentials:<br/>
-            <button onClick={() => setEmail('manager@cityuni.edu')} className="text-emerald-600 hover:underline">manager@cityuni.edu</button> | 
-            <button onClick={() => setEmail('staff@hopefoodbank.org')} className="text-emerald-600 hover:underline ml-2">staff@hopefoodbank.org</button>
-          </p>
+    <div className="min-h-screen flex flex-col justify-between bg-[var(--bg-primary)] py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
+      {/* Background Orbs */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-300/30 dark:bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-300/30 dark:bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="max-w-md w-full mx-auto space-y-6 relative z-10 my-auto">
+        <div className="flex justify-between items-center px-2">
+          <Link href="/" className="clay-button px-4 py-2 bg-[var(--bg-card)] text-[var(--text-primary)] font-bold text-sm flex items-center space-x-2 hover:text-indigo-500 transition-all">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Home</span>
+          </Link>
+          <div className="flex items-center space-x-2 text-indigo-500 font-black">
+            <Leaf className="w-6 h-6" />
+            <span>FoodLoop</span>
+          </div>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>}
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Email address</label>
-              <input
-                type="email"
-                required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-gray-900"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+
+        <div className="clay-card p-8 bg-[var(--bg-card)] backdrop-blur-xl">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-black text-[var(--text-primary)] tracking-tight">
+              Welcome Back
+            </h2>
+            <p className="mt-2 text-sm text-[var(--text-muted)] font-medium">
+              Sign in to manage food inventory &amp; surplus AI analytics.
+            </p>
+
+            {/* Quick-Login Demo Pills */}
+            <div className="mt-4 p-3 bg-indigo-500/10 dark:bg-indigo-500/15 rounded-2xl border border-indigo-500/20 text-xs text-[var(--text-accent)] font-bold space-y-1">
+              <p className="flex items-center justify-center font-extrabold text-[var(--text-accent)]">
+                <Sparkles className="w-3.5 h-3.5 mr-1 text-indigo-400" /> Demo Quick Login Roles:
+              </p>
+              <div className="flex justify-center space-x-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => { setEmail('kitchen@kitchen.com'); setPassword('Qwertyui12345678@'); setShowStrength(false); }}
+                  className="px-2.5 py-1 clay-pill bg-[var(--bg-secondary)] text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all text-xs font-bold"
+                >
+                  Kitchen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('ngo@ngo.com'); setPassword('Qwertyui12345678@'); setShowStrength(false); }}
+                  className="px-2.5 py-1 clay-pill bg-[var(--bg-secondary)] text-purple-500 hover:bg-purple-500 hover:text-white transition-all text-xs font-bold"
+                >
+                  NGO
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail('admin@admin.com'); setPassword('Qwertyui12345678@'); setShowStrength(false); }}
+                  className="px-2.5 py-1 clay-pill bg-[var(--bg-secondary)] text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all text-xs font-bold"
+                >
+                  Admin
+                </button>
+              </div>
+              <p className="text-[10px] font-semibold text-[var(--text-muted)] mt-1 pt-1 border-t border-indigo-500/20">
+                Password: <code className="font-mono bg-[var(--bg-secondary)] px-1 rounded text-[var(--text-primary)]">Qwertyui12345678@</code>
+              </p>
             </div>
+          </div>
+
+          <form className="space-y-5" onSubmit={handleLogin}>
+            {error && (
+              <div className="bg-rose-500/10 border border-rose-500/30 text-rose-500 dark:text-rose-400 p-3.5 rounded-2xl text-xs font-bold animate-in fade-in">
+                {error}
+              </div>
+            )}
+
+            {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
-              <div className="relative mt-1">
+              <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Email Address</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[var(--text-muted)]">
+                  <Mail className="h-4 w-4" />
+                </div>
                 <input
+                  id="login-email"
+                  type="email"
+                  required
+                  className="w-full pl-10 pr-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-theme)] rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-[var(--text-primary)] text-sm font-semibold shadow-inner transition-colors"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@organization.com"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[var(--text-muted)]">
+                  <Lock className="h-4 w-4" />
+                </div>
+                <input
+                  id="login-password"
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm text-gray-900"
+                  className="w-full pl-10 pr-10 py-3 bg-[var(--bg-secondary)] border border-[var(--border-theme)] rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-[var(--text-primary)] text-sm font-semibold shadow-inner transition-colors"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setShowStrength(true); }}
+                  onFocus={() => setShowStrength(true)}
+                  placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-            </div>
-          </div>
 
-          <div>
+              {/* Password Strength Checklist — theme-aware */}
+              {showStrength && password.length > 0 && (
+                <div className="mt-2.5 p-3 bg-[var(--bg-secondary)] border border-[var(--border-theme)] rounded-2xl space-y-1 animate-in fade-in duration-200">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-1.5">Password Requirements</p>
+                  {PASSWORD_RULES.map((rule) => {
+                    const passed = rule.test(password);
+                    return (
+                      <div key={rule.label} className="flex items-center space-x-2">
+                        {passed
+                          ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                          : <XCircle className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 flex-shrink-0" />
+                        }
+                        <span className={`text-[11px] font-semibold ${passed ? 'text-emerald-600 dark:text-emerald-400' : 'text-[var(--text-muted)]'}`}>
+                          {rule.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <button
+              id="login-submit"
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-70"
+              className="clay-indigo w-full py-3.5 px-4 font-black text-white active:scale-95 transition-all text-sm shadow-xl cursor-pointer disabled:opacity-70"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? 'Authenticating…' : 'Sign In'}
             </button>
+          </form>
+
+          <div className="mt-6 text-center text-xs font-medium text-[var(--text-muted)]">
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="font-bold text-indigo-500 hover:underline">
+              Create one
+            </Link>
           </div>
-          <div className="text-center">
-             <Link href="/" className="text-sm font-medium text-emerald-600 hover:text-emerald-500">Back to home</Link>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,10 @@
 import { DeliveryRepository } from '../repositories/delivery.repository';
 import { DeliveryStatusInput } from '../schemas/delivery.schema';
-import { io } from '../socket';
+import { getIO } from '../socket';
+import { AuditService } from './audit.service';
 
 const deliveryRepo = new DeliveryRepository();
+const auditService = new AuditService();
 
 function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Radius of the earth in km
@@ -55,6 +57,15 @@ export class DeliveryService {
   async updateDeliveryStatus(deliveryId: string, input: DeliveryStatusInput) {
     const result = await deliveryRepo.updateDeliveryStatusTransaction(deliveryId, input.status);
     
+    await auditService.logAction({
+      entityId: deliveryId,
+      entityType: 'DELIVERY',
+      action: 'UPDATE_STATUS',
+      actorId: 'driver', // could pass user.id if available
+      details: { status: input.status }
+    });
+
+    const io = getIO();
     if (io) {
       io.emit('delivery_updated', { deliveryId, status: input.status });
       io.to('role_ADMIN').emit('notification', { 

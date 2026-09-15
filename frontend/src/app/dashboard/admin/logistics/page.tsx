@@ -2,9 +2,11 @@
 
 import dynamic from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 
 const GlobalHeatmap = dynamic(
-  () => import('@/components/Map/GlobalHeatmap').then((mod) => mod.GlobalHeatmap),
+  () => import('@/components/Map/GlobalHeatmap'),
   { 
     ssr: false,
     loading: () => (
@@ -17,6 +19,20 @@ const GlobalHeatmap = dynamic(
 );
 
 export default function LogisticsOverview() {
+  const [organizations, setOrganizations] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchOrgs = async () => {
+      try {
+        const res = await api.get('/analytics/organizations');
+        if (res.data?.success) setOrganizations(res.data.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchOrgs();
+  }, []);
+
   return (
     <div className="h-[calc(100vh-4rem)] w-full relative">
       <div className="absolute top-6 left-6 z-[400] bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-2xl border border-slate-100 max-w-sm pointer-events-auto">
@@ -39,7 +55,7 @@ export default function LogisticsOverview() {
       </div>
       
       <div className="absolute inset-0 z-0">
-        <GlobalHeatmap />
+        <GlobalHeatmap orgs={organizations} />
       </div>
     </div>
   );
