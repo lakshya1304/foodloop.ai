@@ -10,7 +10,7 @@ export function getIO(): Server | null {
 export function setupSocket(server: FastifyInstance) {
   ioInstance = new Server(server.server, {
     cors: {
-      origin: true,
+      origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : true,
       credentials: true
     }
   });
