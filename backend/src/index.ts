@@ -42,7 +42,7 @@ server.register(rateLimit, {
 server.register(helmet, { global: true, contentSecurityPolicy: false });
 
 server.register(cors, {
-  origin: true,
+  origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : true,
   credentials: true
 });
 

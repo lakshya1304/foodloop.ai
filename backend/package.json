@@ -8,7 +8,8 @@
     "start": "bun run ./dist/index.js",
     "seed": "bun prisma/seed.ts",
     "iot": "bun src/iot-simulator.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "postinstall": "prisma generate && prisma generate --schema=prisma/audit.prisma"
   },
   "keywords": [],
   "author": "",
