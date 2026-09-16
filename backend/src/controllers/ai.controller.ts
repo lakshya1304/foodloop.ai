@@ -39,7 +39,15 @@ export class AiController {
   }
 
   async getRecommendations(request: FastifyRequest, reply: FastifyReply) {
-    const data = await aiService.getRecommendations();
+    const user = request.user as any;
+    let kitchenId: string | undefined;
+    if (user && user.organizationId) {
+       const { PrismaClient } = require('@prisma/client');
+       const prisma = new PrismaClient();
+       const kitchen = await prisma.kitchen.findFirst({ where: { organizationId: user.organizationId } });
+       if (kitchen) kitchenId = kitchen.id;
+    }
+    const data = await aiService.getRecommendations(kitchenId);
     return reply.send({ success: true, data });
   }
 

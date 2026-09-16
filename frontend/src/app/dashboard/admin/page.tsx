@@ -5,6 +5,8 @@ import { api } from '@/lib/api';
 import { Users, BarChart3, TrendingDown, Factory, HeartHandshake, Banknote, Droplets, MapPin, Download } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import * as XLSX from 'xlsx';
+import { toast } from 'sonner';
 
 const GlobalHeatmap = dynamic(() => import('@/components/Map/GlobalHeatmap'), { ssr: false });
 
@@ -71,6 +73,52 @@ export default function AdminDashboard() {
     { name: 'Sun', co2: 349, waste: 430, meals: 860 },
   ];
 
+  const handleGenerateReport = () => {
+    if (!stats || !orgs || !activity) {
+      toast.error('Data is still loading, please wait.');
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+
+    const statsSheet = XLSX.utils.json_to_sheet([{
+      TotalSurplusRescued_kg: stats.totalSurplusRescued || 0,
+      MoneySaved_INR: stats.moneySaved || 0,
+      CO2Prevented_kg: stats.co2Prevented || 0,
+      WaterSaved_Liters: stats.waterSavedLiters || 0,
+      ActiveKitchens: stats.activeOrgs?.KITCHEN || 0,
+      ActiveNGOs: stats.activeOrgs?.NGO || 0,
+    }]);
+
+    const orgsSheet = XLSX.utils.json_to_sheet(orgs.map((org: any) => ({
+      Name: org.name,
+      Type: org.type,
+      Users: org._count?.users || 0,
+      Joined: new Date(org.createdAt).toLocaleDateString()
+    })));
+
+    const activitySheet = XLSX.utils.json_to_sheet(activity.map((act: any) => ({
+      Title: act.title,
+      Description: act.description,
+      Status: act.status,
+      Time: new Date(act.timestamp).toLocaleString()
+    })));
+
+    const auditSheet = XLSX.utils.json_to_sheet(auditLogs.map((log: any) => ({
+      Action: log.action,
+      Entity: `${log.entityType} (${log.entityId})`,
+      BlockchainHash: log.blockchainHash || 'N/A',
+      Time: new Date(log.createdAt).toLocaleString()
+    })));
+
+    XLSX.utils.book_append_sheet(wb, statsSheet, 'System Stats');
+    XLSX.utils.book_append_sheet(wb, orgsSheet, 'Organizations');
+    XLSX.utils.book_append_sheet(wb, activitySheet, 'Activity');
+    XLSX.utils.book_append_sheet(wb, auditSheet, 'Audit Trail');
+
+    XLSX.writeFile(wb, `FoodLoop_Admin_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('Report generated successfully');
+  };
+
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-10 animate-fade-in-up">
       <div className="flex items-center justify-between">
@@ -78,7 +126,7 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">System Overview</h1>
           <p className="text-slate-500 mt-1">Monitor the pulse of the FoodLoop network.</p>
         </div>
-        <button className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/30 text-sm font-semibold hover:scale-105 hover:shadow-emerald-500/40 transition-all duration-300 ease-in-out">
+        <button onClick={handleGenerateReport} className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/30 text-sm font-semibold hover:scale-105 hover:shadow-emerald-500/40 transition-all duration-300 ease-in-out">
           Generate Full Report
         </button>
       </div>

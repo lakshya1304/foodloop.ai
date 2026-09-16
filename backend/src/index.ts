@@ -31,7 +31,7 @@ const logStream = split((line: string) => {
   }
 });
 
-const server = fastify({ logger: { stream: logStream, level: 'info' } });
+const server = fastify({ logger: { stream: logStream, level: 'info' }, bodyLimit: 15 * 1024 * 1024 });
 const prisma = new PrismaClient();
 
 server.register(rateLimit, {

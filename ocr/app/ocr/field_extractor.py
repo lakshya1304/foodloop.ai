@@ -3,8 +3,19 @@ from typing import Dict, Any
 
 def extract_fields(lines: list[str]) -> Dict[str, Any]:
     # Extremely basic heuristic extractor for the sake of the demo.
-    # In a real scenario, this would use robust NLP or specialized regex patterns.
     
+    # 0. Deduplicate lines and remove empty ones to avoid repeated fake data
+    unique_lines = []
+    seen = set()
+    for line in lines:
+        line_clean = line.strip()
+        if not line_clean: continue
+        low = line_clean.lower()
+        if low not in seen:
+            unique_lines.append(line_clean)
+            seen.add(low)
+    lines = unique_lines
+
     extracted = {
         "product_name": None,
         "manufacturing_date": None,
@@ -13,15 +24,18 @@ def extract_fields(lines: list[str]) -> Dict[str, Any]:
         "warnings": []
     }
     
-    # 1. Product Name: Assume it's one of the first few lines and not a date/batch
-    for line in lines[:3]:
-        # skip if it looks like a date or batch
-        if "mfg" in line.lower() or "exp" in line.lower() or "batch" in line.lower() or "lot" in line.lower():
+    # 1. Product Name: Look for strings that actually look like a product name
+    for line in lines[:8]:
+        lower = line.lower()
+        # skip if it looks like a date, batch, barcode or random junk
+        if "mfg" in lower or "exp" in lower or "batch" in lower or "lot" in lower or "bn " in lower or len(line) < 3:
             continue
-        # Just grab the first non-meta line as product name
-        if not extracted["product_name"] and len(line) > 2:
-            extracted["product_name"] = line.strip()
-            break
+        # Check if it has mostly letters and spaces (to avoid picking up random OCR artifacts and barcodes)
+        if sum(c.isalpha() or c.isspace() for c in line) > len(line) * 0.6:
+            if not extracted["product_name"]:
+                extracted["product_name"] = line.strip()
+                break
+
             
     # 2. Dates
     date_pattern = r'(\d{2,4}[-/.]\d{2}[-/.]\d{2,4})'

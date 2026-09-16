@@ -30,6 +30,36 @@ class OcrProvider {
             throw new Error(error.message || 'Failed to connect to OCR Service');
         }
     }
+    async predictDemand(history) {
+        try {
+            const response = await axios_1.default.post(`${this.apiUrl}/v1/ai/predict-demand`, { history }, {
+                headers: { 'X-OCR-Service-Key': this.apiKey },
+                timeout: this.timeoutMs,
+            });
+            return response.data;
+        }
+        catch (error) {
+            if (error.response) {
+                throw new Error(error.response.data?.error || 'OCR Service Error');
+            }
+            throw new Error(error.message || 'Failed to connect to OCR Service');
+        }
+    }
+    async analyzeQuality(imageParts) {
+        try {
+            const response = await axios_1.default.post(`${this.apiUrl}/v1/ai/analyze-quality`, { imageParts }, {
+                headers: { 'X-OCR-Service-Key': this.apiKey },
+                timeout: this.timeoutMs,
+            });
+            return response.data;
+        }
+        catch (error) {
+            if (error.response) {
+                throw new Error(error.response.data?.error || 'OCR Service Error');
+            }
+            throw new Error(error.message || 'Failed to connect to OCR Service');
+        }
+    }
 }
 exports.OcrProvider = OcrProvider;
 //# sourceMappingURL=ocr.provider.js.map

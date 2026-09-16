@@ -2,7 +2,12 @@ import { DemandPredictionInput, AnalyzeQualityInput } from '../schemas/ai.schema
 export declare class AiService {
     ocrExtract(fileBuffer: Buffer, filename: string, mimeType: string): Promise<any>;
     demandPrediction(input: DemandPredictionInput): Promise<any>;
-    analyzeQuality(input: AnalyzeQualityInput): Promise<any>;
+    analyzeQuality(input: AnalyzeQualityInput): Promise<{
+        quality_status: string;
+        visible_issues: any[];
+        confidence: any;
+        recommendation: string;
+    }>;
     getScans(): Promise<{
         id: string;
         createdAt: Date;

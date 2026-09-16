@@ -17,6 +17,36 @@ class DeliveryRepository {
             }
         });
     }
+    async findDeliveriesByNgoId(userId) {
+        return prisma.delivery.findMany({
+            where: {
+                redistribution: {
+                    ngo: { userId }
+                }
+            },
+            include: {
+                redistribution: {
+                    include: { surplus: { include: { kitchen: true } }, ngo: true }
+                }
+            }
+        });
+    }
+    async findDeliveriesByKitchenId(userId) {
+        return prisma.delivery.findMany({
+            where: {
+                redistribution: {
+                    surplus: {
+                        kitchen: { userId }
+                    }
+                }
+            },
+            include: {
+                redistribution: {
+                    include: { surplus: { include: { kitchen: true } }, ngo: true }
+                }
+            }
+        });
+    }
     async updateDeliveryStatusTransaction(deliveryId, status) {
         return prisma.$transaction(async (tx) => {
             const currentDelivery = await tx.delivery.findUnique({ where: { id: deliveryId } });

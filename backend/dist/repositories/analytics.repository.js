@@ -12,13 +12,11 @@ class AnalyticsRepository {
     async getKitchenDashboard(kitchenId) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const [predictions, productions, consumptions, surpluses, alerts] = await Promise.all([
-            prisma.demandPrediction.findMany({ where: { kitchenId, targetDate: { gte: today } } }),
-            prisma.productionRecord.findMany({ where: { kitchenId, date: { gte: today } } }),
-            prisma.consumptionRecord.findMany({ where: { kitchenId, date: { gte: today } } }),
-            prisma.surplus.findMany({ where: { kitchenId, status: 'AVAILABLE' } }),
-            prisma.alert.findMany({ where: { isResolved: false } }) // Actually alerts might be per kitchen, but keeping current logic
-        ]);
+        const predictions = await prisma.demandPrediction.findMany({ where: { kitchenId, targetDate: { gte: today } } });
+        const productions = await prisma.productionRecord.findMany({ where: { kitchenId, date: { gte: today } } });
+        const consumptions = await prisma.consumptionRecord.findMany({ where: { kitchenId, date: { gte: today } } });
+        const surpluses = await prisma.surplus.findMany({ where: { kitchenId, status: 'AVAILABLE' } });
+        const alerts = await prisma.alert.findMany({ where: { isResolved: false } });
         return { predictions, productions, consumptions, activeSurpluses: surpluses, activeAlerts: alerts };
     }
     async getSystemOverview() {

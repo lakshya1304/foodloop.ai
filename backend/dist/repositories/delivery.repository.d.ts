@@ -51,6 +51,22 @@ export declare class DeliveryRepository {
         pickupTime: Date | null;
         deliveryTime: Date | null;
     })[]>;
+    findDeliveriesByNgoId(userId: string): Promise<{
+        id: string;
+        status: string;
+        redistributionId: string;
+        driverId: string | null;
+        pickupTime: Date | null;
+        deliveryTime: Date | null;
+    }[]>;
+    findDeliveriesByKitchenId(userId: string): Promise<{
+        id: string;
+        status: string;
+        redistributionId: string;
+        driverId: string | null;
+        pickupTime: Date | null;
+        deliveryTime: Date | null;
+    }[]>;
     updateDeliveryStatusTransaction(deliveryId: string, status: string): Promise<{
         id: string;
         status: string;
