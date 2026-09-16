@@ -21,7 +21,13 @@ class DeliveryRepository {
         return prisma.delivery.findMany({
             where: {
                 redistribution: {
-                    ngo: { userId }
+                    ngo: {
+                        organization: {
+                            users: {
+                                some: { id: userId }
+                            }
+                        }
+                    }
                 }
             },
             include: {
@@ -36,7 +42,13 @@ class DeliveryRepository {
             where: {
                 redistribution: {
                     surplus: {
-                        kitchen: { userId }
+                        kitchen: {
+                            organization: {
+                                users: {
+                                    some: { id: userId }
+                                }
+                            }
+                        }
                     }
                 }
             },

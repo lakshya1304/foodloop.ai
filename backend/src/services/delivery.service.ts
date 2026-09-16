@@ -61,6 +61,55 @@ export class DeliveryService {
     });
   }
 
+  async getAvailableDeliveries() {
+    const deliveries = await deliveryRepo.findAvailableDeliveries();
+    return deliveries.map(d => {
+      let distanceKm = 12; // Default mock
+      let timeMins = 25;
+
+      const kitchenLat = d.redistribution?.surplus?.kitchen?.latitude;
+      const kitchenLng = d.redistribution?.surplus?.kitchen?.longitude;
+      const ngoLat = d.redistribution?.ngo?.latitude;
+      const ngoLng = d.redistribution?.ngo?.longitude;
+
+      if (kitchenLat && kitchenLng && ngoLat && ngoLng) {
+        distanceKm = Math.round(getDistanceFromLatLonInKm(kitchenLat, kitchenLng, ngoLat, ngoLng) * 10) / 10;
+        timeMins = Math.round(distanceKm * 2); 
+      }
+
+      return {
+        ...d,
+        calculatedRoute: {
+          distanceText: `${distanceKm} km`,
+          durationText: `${timeMins} mins`
+        }
+      };
+    });
+  }
+
+  async claimDelivery(deliveryId: string, user: any) {
+    if (user.role !== 'DRIVER') throw new Error('Unauthorized');
+    const driver = await deliveryRepo.findDriverByUserId(user.id);
+    if (!driver) throw new Error('Driver profile not found');
+    
+    const result = await deliveryRepo.claimDelivery(deliveryId, driver.id);
+
+    await auditService.logAction({
+      entityId: deliveryId,
+      entityType: 'DELIVERY',
+      action: 'CLAIMED',
+      actorId: user.id,
+      details: { driverId: driver.id }
+    });
+
+    const io = getIO();
+    if (io) {
+      io.emit('delivery_updated', { deliveryId, status: 'ASSIGNED' });
+    }
+    
+    return result;
+  }
+
   async updateDeliveryStatus(deliveryId: string, input: DeliveryStatusInput) {
     const result = await deliveryRepo.updateDeliveryStatusTransaction(deliveryId, input.status);
     

@@ -247,7 +247,7 @@ export default function KitchenDashboard() {
   const todayPrediction = data?.predictions?.[0] || { predictedDemand: '-', recommendedProduction: '-' };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-10 animate-fade-in-up">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 md:space-y-10 animate-fade-in-up">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Kitchen Operations</h1>
@@ -294,7 +294,7 @@ export default function KitchenDashboard() {
       {/* Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden">
-          <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+          <div className="px-4 md:px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-3">
               <div className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg"><Package className="h-4 w-4" /></div>
               Inventory (Expiring Soon)
@@ -302,7 +302,7 @@ export default function KitchenDashboard() {
           </div>
           <div className="divide-y divide-slate-50">
             {inventory.slice(0, 5).map((item: any) => (
-              <div key={item.id} className="p-5 px-8 flex justify-between items-center hover:bg-slate-50/50 transition-colors">
+              <div key={item.id} className="p-5 px-4 md:px-8 flex justify-between items-center hover:bg-slate-50/50 transition-colors">
                 <div>
                   <p className="font-bold text-slate-900">{item.productName}</p>
                   <p className="text-sm font-medium text-slate-500 mt-1">Exp: {item.expiryDate ? new Date(item.expiryDate).toLocaleDateString() : 'N/A'}</p>
@@ -320,7 +320,7 @@ export default function KitchenDashboard() {
         </div>
 
         <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden">
-          <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/50">
+          <div className="px-4 md:px-8 py-5 border-b border-slate-100 bg-slate-50/50">
             <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-3">
               <div className="p-1.5 bg-emerald-100 text-emerald-600 rounded-lg"><CheckCircle2 className="h-4 w-4" /></div>
               Active Redistributions
@@ -328,7 +328,7 @@ export default function KitchenDashboard() {
           </div>
           <div className="divide-y divide-slate-50">
             {data?.activeSurpluses?.map((surplus: any) => (
-              <div key={surplus.id} className="p-5 px-8 flex justify-between items-center hover:bg-slate-50/50 transition-colors">
+              <div key={surplus.id} className="p-5 px-4 md:px-8 flex justify-between items-center hover:bg-slate-50/50 transition-colors">
                 <div>
                   <p className="font-bold text-slate-900">{surplus.foodItem}</p>
                   <p className="text-sm font-medium text-slate-500 mt-1">{new Date(surplus.date).toLocaleDateString()}</p>
@@ -349,7 +349,7 @@ export default function KitchenDashboard() {
       {/* New Row: AI & IoT */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden">
-          <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/50">
+          <div className="px-4 md:px-8 py-5 border-b border-slate-100 bg-slate-50/50">
             <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-3">
               <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg"><Zap className="h-4 w-4" /></div>
               AI Insights & Recommendations
@@ -357,7 +357,7 @@ export default function KitchenDashboard() {
           </div>
           <div className="divide-y divide-slate-50">
             {recommendations?.map((rec: any) => (
-              <div key={rec.id} className="p-5 px-8 flex justify-between items-start hover:bg-slate-50/50 transition-colors">
+              <div key={rec.id} className="p-5 px-4 md:px-8 flex justify-between items-start hover:bg-slate-50/50 transition-colors">
                 <div>
                   <p className="font-bold text-slate-900">{rec.title}</p>
                   <p className="text-sm font-medium text-slate-600 mt-1">{rec.description}</p>
@@ -369,7 +369,7 @@ export default function KitchenDashboard() {
         </div>
 
         <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden">
-          <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/50">
+          <div className="px-4 md:px-8 py-5 border-b border-slate-100 bg-slate-50/50">
             <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-3">
               <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg"><Activity className="h-4 w-4" /></div>
               IoT Sensor Monitoring
@@ -380,7 +380,7 @@ export default function KitchenDashboard() {
               const latestReading = sensor.readings?.[0];
               const isAlert = latestReading?.isAlertTriggered;
               return (
-                <div key={sensor.id} className="p-5 px-8 flex justify-between items-center hover:bg-slate-50/50 transition-colors">
+                <div key={sensor.id} className="p-5 px-4 md:px-8 flex flex-wrap justify-between items-center gap-4 hover:bg-slate-50/50 transition-colors">
                   <div>
                     <p className="font-bold text-slate-900">{sensor.name} <span className="text-xs text-slate-400 font-medium ml-2">({sensor.location})</span></p>
                     <p className="text-sm font-medium text-slate-500 mt-1">Status: {sensor.status}</p>
@@ -402,7 +402,7 @@ export default function KitchenDashboard() {
       </div>
 
       {/* Live Route Map for Kitchen Deliveries */}
-      <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-6 mb-8">
+      <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-4 md:p-6 mb-8">
         <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-4 flex items-center gap-2">
           <MapIcon className="h-5 w-5 text-indigo-500" /> Live Delivery Tracking
         </h3>
@@ -411,17 +411,17 @@ export default function KitchenDashboard() {
 
       {/* Global Impact Leaderboard */}
       <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-indigo-500/30">
-        <div className="px-8 py-6 border-b border-white/10 bg-black/20 flex justify-between items-center">
+        <div className="px-4 md:px-8 py-6 border-b border-white/10 bg-black/20 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-3">
             <span className="text-2xl">🏆</span> Global Impact Leaderboard
           </h3>
           <span className="text-indigo-200 text-sm font-medium">Top Kitchens saving the most food</span>
         </div>
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           {data?.leaderboard?.kitchens?.length > 0 ? (
             <div className="space-y-4">
               {data.leaderboard.kitchens.map((k: any, idx: number) => (
-                <div key={k.id} className="flex items-center justify-between bg-white/5 rounded-2xl p-5 hover:bg-white/10 transition-colors border border-white/5">
+                <div key={k.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/5 rounded-2xl p-4 md:p-5 hover:bg-white/10 transition-colors border border-white/5">
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-inner ${idx === 0 ? 'bg-yellow-400 text-yellow-900' : idx === 1 ? 'bg-slate-300 text-slate-800' : idx === 2 ? 'bg-amber-600 text-amber-50' : 'bg-indigo-900/50 text-indigo-200'}`}>
                       {idx + 1}

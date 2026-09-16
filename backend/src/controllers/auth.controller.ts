@@ -10,61 +10,75 @@ const auditService = new AuditService();
 export class AuthController {
   
   async register(request: FastifyRequest, reply: FastifyReply) {
-    const data = registerSchema.parse(request.body);
-    const user = await authService.registerUser(data);
-    
-    await auditService.logAction({
-      entityId: user.id,
-      entityType: 'USER',
-      action: 'REGISTER',
-      actorId: user.id,
-      details: { email: user.email, role: user.role }
-    });
+    try {
+      const data = registerSchema.parse(request.body);
+      const user = await authService.registerUser(data);
+      
+      await auditService.logAction({
+        entityId: user.id,
+        entityType: 'USER',
+        action: 'REGISTER',
+        actorId: user.id,
+        details: { email: user.email, role: user.role }
+      });
 
-    const fastify = request.server;
-    const accessToken = fastify.jwt.sign({ id: user.id, role: user.role, organizationId: user.organizationId }, { expiresIn: '15m' });
-    const refreshToken = await authService.createRefreshToken(user.id);
-    
-    reply.setCookie('accessToken', accessToken, {
-      path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', maxAge: 15 * 60
-    });
-    reply.setCookie('refreshToken', refreshToken, {
-      path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', maxAge: 7 * 24 * 60 * 60
-    });
+      const fastify = request.server;
+      const accessToken = fastify.jwt.sign({ id: user.id, role: user.role, organizationId: user.organizationId }, { expiresIn: '15m' });
+      const refreshToken = await authService.createRefreshToken(user.id);
+      
+      reply.setCookie('accessToken', accessToken, {
+        path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', maxAge: 15 * 60
+      });
+      reply.setCookie('refreshToken', refreshToken, {
+        path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', maxAge: 7 * 24 * 60 * 60
+      });
 
-    return reply.status(201).send({
-      success: true,
-      data: { user: { id: user.id, email: user.email, name: user.name, role: user.role, organizationId: user.organizationId } }
-    });
+      return reply.status(201).send({
+        success: true,
+        data: { user: { id: user.id, email: user.email, name: user.name, role: user.role, organizationId: user.organizationId } }
+      });
+    } catch (err: any) {
+      return reply.status(400).send({
+        success: false,
+        error: { message: err.message || 'Registration failed' }
+      });
+    }
   }
 
   async login(request: FastifyRequest, reply: FastifyReply) {
-    const { email, password } = loginSchema.parse(request.body);
-    const user = await authService.validateUser(email, password);
+    try {
+      const { email, password } = loginSchema.parse(request.body);
+      const user = await authService.validateUser(email, password);
 
-    await auditService.logAction({
-      entityId: user.id,
-      entityType: 'USER',
-      action: 'LOGIN',
-      actorId: user.id,
-      details: { email: user.email }
-    });
+      await auditService.logAction({
+        entityId: user.id,
+        entityType: 'USER',
+        action: 'LOGIN',
+        actorId: user.id,
+        details: { email: user.email }
+      });
 
-    const fastify = request.server;
-    const accessToken = fastify.jwt.sign({ id: user.id, role: user.role, organizationId: user.organizationId }, { expiresIn: '15m' });
-    const refreshToken = await authService.createRefreshToken(user.id);
+      const fastify = request.server;
+      const accessToken = fastify.jwt.sign({ id: user.id, role: user.role, organizationId: user.organizationId }, { expiresIn: '15m' });
+      const refreshToken = await authService.createRefreshToken(user.id);
 
-    reply.setCookie('accessToken', accessToken, {
-      path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', maxAge: 15 * 60
-    });
-    reply.setCookie('refreshToken', refreshToken, {
-      path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', maxAge: 7 * 24 * 60 * 60
-    });
+      reply.setCookie('accessToken', accessToken, {
+        path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', maxAge: 15 * 60
+      });
+      reply.setCookie('refreshToken', refreshToken, {
+        path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', maxAge: 7 * 24 * 60 * 60
+      });
 
-    return reply.send({
-      success: true,
-      data: { user: { id: user.id, email: user.email, name: user.name, role: user.role, organizationId: user.organizationId } }
-    });
+      return reply.send({
+        success: true,
+        data: { user: { id: user.id, email: user.email, name: user.name, role: user.role, organizationId: user.organizationId } }
+      });
+    } catch (err: any) {
+      return reply.status(401).send({
+        success: false,
+        error: { message: err.message || 'Invalid credentials' }
+      });
+    }
   }
 
   async refresh(request: FastifyRequest, reply: FastifyReply) {

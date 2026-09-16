@@ -8,7 +8,6 @@ import {
   MapPin,
   Zap,
   Globe,
-  Sparkles,
   Cpu,
   Scan,
   Radio,

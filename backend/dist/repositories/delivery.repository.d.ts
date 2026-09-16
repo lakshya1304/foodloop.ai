@@ -51,22 +51,98 @@ export declare class DeliveryRepository {
         pickupTime: Date | null;
         deliveryTime: Date | null;
     })[]>;
-    findDeliveriesByNgoId(userId: string): Promise<{
+    findDeliveriesByNgoId(userId: string): Promise<({
+        redistribution: {
+            surplus: {
+                kitchen: {
+                    id: string;
+                    name: string;
+                    organizationId: string;
+                    location: string;
+                    latitude: number | null;
+                    longitude: number | null;
+                };
+            } & {
+                id: string;
+                date: Date;
+                kitchenId: string;
+                unit: string;
+                status: string;
+                foodItem: string;
+                quantitySurplus: number;
+            };
+            ngo: {
+                id: string;
+                name: string;
+                organizationId: string;
+                location: string;
+                latitude: number | null;
+                longitude: number | null;
+                capacity: number | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: string;
+            surplusId: string;
+            ngoId: string;
+            quantityMatched: number;
+        };
+    } & {
         id: string;
         status: string;
         redistributionId: string;
         driverId: string | null;
         pickupTime: Date | null;
         deliveryTime: Date | null;
-    }[]>;
-    findDeliveriesByKitchenId(userId: string): Promise<{
+    })[]>;
+    findDeliveriesByKitchenId(userId: string): Promise<({
+        redistribution: {
+            surplus: {
+                kitchen: {
+                    id: string;
+                    name: string;
+                    organizationId: string;
+                    location: string;
+                    latitude: number | null;
+                    longitude: number | null;
+                };
+            } & {
+                id: string;
+                date: Date;
+                kitchenId: string;
+                unit: string;
+                status: string;
+                foodItem: string;
+                quantitySurplus: number;
+            };
+            ngo: {
+                id: string;
+                name: string;
+                organizationId: string;
+                location: string;
+                latitude: number | null;
+                longitude: number | null;
+                capacity: number | null;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            status: string;
+            surplusId: string;
+            ngoId: string;
+            quantityMatched: number;
+        };
+    } & {
         id: string;
         status: string;
         redistributionId: string;
         driverId: string | null;
         pickupTime: Date | null;
         deliveryTime: Date | null;
-    }[]>;
+    })[]>;
     updateDeliveryStatusTransaction(deliveryId: string, status: string): Promise<{
         id: string;
         status: string;

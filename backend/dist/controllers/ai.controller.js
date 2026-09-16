@@ -33,7 +33,16 @@ class AiController {
         return reply.send({ success: true, data });
     }
     async getRecommendations(request, reply) {
-        const data = await aiService.getRecommendations();
+        const user = request.user;
+        let kitchenId;
+        if (user && user.organizationId) {
+            const { PrismaClient } = require('@prisma/client');
+            const prisma = new PrismaClient();
+            const kitchen = await prisma.kitchen.findFirst({ where: { organizationId: user.organizationId } });
+            if (kitchen)
+                kitchenId = kitchen.id;
+        }
+        const data = await aiService.getRecommendations(kitchenId);
         return reply.send({ success: true, data });
     }
     async getScans(request, reply) {

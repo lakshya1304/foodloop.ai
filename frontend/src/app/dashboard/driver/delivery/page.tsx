@@ -135,7 +135,7 @@ export default function DeliveryDashboard() {
               Live Route Navigation
             </h2>
             <div className="h-[400px] w-full rounded-xl overflow-hidden border border-slate-200">
-               <RouteMap deliveries={pendingDeliveries} />
+               <RouteMap tasks={pendingDeliveries} />
             </div>
           </div>
         </div>

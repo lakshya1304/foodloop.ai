@@ -40,7 +40,8 @@ class AnalyticsService {
                             targetDate: new Date(),
                             predictedDemand: aiRes.predictedDemand,
                             recommendedProduction: aiRes.recommendedProduction,
-                            confidenceScore: aiRes.confidence || 0.8
+                            expectedSurplus: Math.max(0, aiRes.recommendedProduction - aiRes.predictedDemand),
+                            confidence: aiRes.confidence || 0.8
                         }
                     });
                     data.predictions.push(newPrediction);

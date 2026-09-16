@@ -79,7 +79,7 @@ export default function NgoDashboard() {
   if (loading) return <DashboardSkeleton />;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-10 animate-fade-in-up">
+    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 md:space-y-10 animate-fade-in-up">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">NGO Dashboard</h1>
@@ -108,7 +108,7 @@ export default function NgoDashboard() {
       </div>
 
       <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden mt-8">
-        <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/50">
+        <div className="px-4 md:px-8 py-5 border-b border-slate-100 bg-slate-50/50">
           <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-3">
             <div className="p-1.5 bg-emerald-100 text-emerald-600 rounded-lg"><Package className="h-4 w-4" /></div>
             Available Surplus Opportunities
@@ -116,7 +116,7 @@ export default function NgoDashboard() {
         </div>
         <div className="divide-y divide-slate-50">
           {surpluses.map((surplus: any) => (
-            <div key={surplus.id} className="p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-slate-50/50 transition-colors">
+            <div key={surplus.id} className="p-4 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-slate-50/50 transition-colors">
               <div>
                 <div className="flex items-center gap-3">
                   <h4 className="text-xl font-bold text-slate-900">{surplus.foodItem}</h4>
@@ -141,7 +141,7 @@ export default function NgoDashboard() {
             </div>
           ))}
           {surpluses.length === 0 && (
-            <div className="p-16 text-center text-slate-500 border border-dashed border-slate-200 m-8 rounded-2xl bg-slate-50/50">
+            <div className="p-8 md:p-16 text-center text-slate-500 border border-dashed border-slate-200 m-4 md:m-8 rounded-2xl bg-slate-50/50">
               <Package className="h-16 w-16 mx-auto text-slate-300 mb-6" />
               <p className="text-xl font-bold text-slate-900 tracking-tight">No surplus available right now</p>
               <p className="mt-2 font-medium">We'll notify you when new food is matched to your location.</p>
@@ -151,7 +151,7 @@ export default function NgoDashboard() {
       </div>
 
       {/* Live Route Map for Incoming Deliveries */}
-      <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-6 mt-8">
+      <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-4 md:p-6 mt-8">
         <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-4 flex items-center gap-2">
           <MapIcon className="h-5 w-5 text-indigo-500" /> Incoming Deliveries Tracking
         </h3>

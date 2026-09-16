@@ -1,6 +1,6 @@
 'use client';
 
-import { Cpu, Brain, Zap, Target, Sparkles, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { Cpu, Brain, Zap, Target, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSocket } from '@/components/SocketProvider';
 
@@ -68,7 +68,7 @@ export default function AICommandCenter() {
           disabled={loadingPred}
           className="clay-indigo hover:opacity-95 font-black px-7 py-4 flex items-center justify-center space-x-3 active:scale-95 transition-all text-white cursor-pointer"
         >
-          {loadingPred ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
+          {loadingPred ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Cpu className="w-5 h-5" />}
           <span>{loadingPred ? 'Calculating ML Model...' : 'Run Demand AI Model'}</span>
         </button>
       </div>

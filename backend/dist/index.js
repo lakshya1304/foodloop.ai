@@ -33,7 +33,7 @@ const logStream = (0, split2_1.default)((line) => {
         process.stdout.write(line + '\n');
     }
 });
-const server = (0, fastify_1.default)({ logger: { stream: logStream, level: 'info' } });
+const server = (0, fastify_1.default)({ logger: { stream: logStream, level: 'info' }, bodyLimit: 15 * 1024 * 1024 });
 const prisma = new client_1.PrismaClient();
 server.register(rate_limit_1.default, {
     max: 100,

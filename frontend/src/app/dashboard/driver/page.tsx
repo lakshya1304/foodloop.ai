@@ -27,12 +27,27 @@ export default function DriverDashboard() {
     }
   });
 
+  const { data: availableTasksRes, refetch: refetchAvailable } = useQuery({
+    queryKey: ['available-deliveries'],
+    queryFn: async () => {
+      const res = await api.get('/deliveries/available');
+      return res.data.data.map((d: any) => ({
+        id: d.id,
+        status: d.status,
+        surplus: d.redistribution.surplus,
+        ngo: d.redistribution.ngo,
+        routeOptimized: d.calculatedRoute
+      }));
+    }
+  });
+
   const { socket } = useSocket();
 
   useEffect(() => {
     if (!socket) return;
     const handleUpdate = () => {
       refetch();
+      refetchAvailable();
     };
     socket.on('delivery_updated', handleUpdate);
     return () => {
@@ -41,6 +56,7 @@ export default function DriverDashboard() {
   }, [socket, refetch]);
 
   const tasks = tasksRes || [];
+  const availableTasks = availableTasksRes || [];
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
@@ -59,10 +75,21 @@ export default function DriverDashboard() {
     }
   };
 
+  const handleClaim = async (id: string) => {
+    try {
+      await api.post(`/deliveries/${id}/claim`);
+      toast.success('Delivery claimed successfully!');
+      refetch();
+      refetchAvailable();
+    } catch (err) {
+      toast.error('Error claiming delivery');
+    }
+  };
+
   if (isLoading) return <DashboardSkeleton />;
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-10 animate-fade-in-up">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-10 animate-fade-in-up">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Driver Dashboard</h1>
@@ -78,8 +105,57 @@ export default function DriverDashboard() {
         <RouteMap tasks={tasks} />
       </div>
 
+      {availableTasks.length > 0 && (
+        <div className="bg-white/80 backdrop-blur-md border border-amber-200 rounded-3xl shadow-xl overflow-hidden">
+          <div className="px-4 md:px-8 py-5 border-b border-amber-100 bg-amber-50/50 flex items-center gap-3">
+            <div className="p-1.5 bg-amber-100 text-amber-600 rounded-lg">
+              <Navigation className="h-5 w-5" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 tracking-tight">Available Deliveries</h3>
+          </div>
+          <div className="divide-y divide-slate-50">
+            {availableTasks.map((task: any) => (
+              <div key={task.id} className="p-4 md:p-8 hover:bg-slate-50/50 transition-colors">
+                <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-8">
+                  <div className="flex-1 space-y-6">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-amber-100/80 text-amber-700">
+                        AVAILABLE
+                      </span>
+                      <span className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">Route: {task.routeOptimized?.distanceText || 'N/A'}</span>
+                    </div>
+                    <div className="relative pl-8 space-y-8">
+                      <div className="absolute top-3 bottom-3 left-[15px] w-0.5 bg-slate-200"></div>
+                      <div className="relative">
+                        <div className="absolute -left-[37px] top-1 h-5 w-5 rounded-full border-4 border-emerald-500 bg-white shadow-sm"></div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Pickup from</p>
+                        <p className="text-lg font-bold text-slate-900">{task.surplus.kitchen.name}</p>
+                        <p className="text-sm font-medium text-slate-500 mt-1 flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {task.surplus.kitchen.location}</p>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute -left-[37px] top-1 h-5 w-5 rounded-full border-4 border-blue-500 bg-white shadow-sm"></div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Deliver to</p>
+                        <p className="text-lg font-bold text-slate-900">{task.ngo.name}</p>
+                        <p className="text-sm font-medium text-slate-500 mt-1 flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {task.ngo.location}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-center gap-4 md:min-w-[220px]">
+                    <button 
+                      onClick={() => handleClaim(task.id)}
+                      className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3.5 rounded-xl shadow-lg shadow-amber-500/30 font-bold hover:shadow-amber-500/50 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                      <CheckCircle className="h-5 w-5" /> Claim Delivery
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden">
-        <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
+        <div className="px-4 md:px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
           <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg">
             <Navigation className="h-5 w-5" />
           </div>
@@ -87,12 +163,12 @@ export default function DriverDashboard() {
         </div>
         <div className="divide-y divide-slate-50">
           {tasks.map((task: any) => (
-            <div key={task.id} className="p-8 hover:bg-slate-50/50 transition-colors">
-              <div className="flex flex-col md:flex-row justify-between gap-8">
+            <div key={task.id} className="p-4 md:p-8 hover:bg-slate-50/50 transition-colors">
+              <div className="flex flex-col md:flex-row justify-between gap-6 md:gap-8">
                 
                 {/* Route Info */}
                 <div className="flex-1 space-y-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider
                       ${task.status === 'PENDING' ? 'bg-slate-100 text-slate-600' :
                         task.status === 'IN_TRANSIT' ? 'bg-blue-100/80 text-blue-700' :
@@ -126,7 +202,7 @@ export default function DriverDashboard() {
 
                 {/* Actions */}
                 <div className="flex flex-col justify-center gap-4 md:min-w-[220px]">
-                  {task.status === 'PENDING' && (
+                  {(task.status === 'PENDING' || task.status === 'ASSIGNED') && (
                     <button 
                       onClick={() => handleUpdateStatus(task.id, 'IN_TRANSIT')}
                       className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3.5 rounded-xl shadow-lg shadow-blue-500/30 font-bold hover:shadow-blue-500/50 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
@@ -150,7 +226,7 @@ export default function DriverDashboard() {
             </div>
           ))}
           {tasks.length === 0 && (
-            <div className="p-16 text-center text-slate-500 border border-dashed border-slate-200 m-8 rounded-2xl bg-slate-50/50">
+            <div className="p-8 md:p-16 text-center text-slate-500 border border-dashed border-slate-200 m-4 md:m-8 rounded-2xl bg-slate-50/50">
               <Navigation className="h-16 w-16 mx-auto text-slate-300 mb-6" />
               <p className="text-xl font-bold text-slate-900 tracking-tight">No active deliveries</p>
               <p className="mt-2 font-medium">You have no pending tasks right now.</p>

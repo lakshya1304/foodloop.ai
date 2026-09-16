@@ -42,7 +42,7 @@ export default function GlobalHeatmap({ orgs }: { orgs: any[] }) {
       <MapContainer center={defaultCenter} zoom={11} className="h-full w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {orgs.map((org, idx) => {
           const isKitchen = org.type === 'KITCHEN';

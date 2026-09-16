@@ -22,7 +22,13 @@ export class DeliveryRepository {
     return prisma.delivery.findMany({
       where: {
         redistribution: {
-          ngo: { userId }
+          ngo: {
+            organization: {
+              users: {
+                some: { id: userId }
+              }
+            }
+          }
         }
       },
       include: {
@@ -38,7 +44,13 @@ export class DeliveryRepository {
       where: {
         redistribution: {
           surplus: {
-            kitchen: { userId }
+            kitchen: {
+              organization: {
+                users: {
+                  some: { id: userId }
+                }
+              }
+            }
           }
         }
       },
@@ -47,6 +59,24 @@ export class DeliveryRepository {
           include: { surplus: { include: { kitchen: true } }, ngo: true }
         }
       }
+    });
+  }
+
+  async findAvailableDeliveries() {
+    return prisma.delivery.findMany({
+      where: { driverId: null, status: 'PENDING' },
+      include: {
+        redistribution: {
+          include: { surplus: { include: { kitchen: true } }, ngo: true }
+        }
+      }
+    });
+  }
+
+  async claimDelivery(deliveryId: string, driverId: string) {
+    return prisma.delivery.update({
+      where: { id: deliveryId },
+      data: { driverId, status: 'ASSIGNED' }
     });
   }
 

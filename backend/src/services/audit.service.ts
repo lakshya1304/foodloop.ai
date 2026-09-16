@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/audit-client';
+import { PrismaClient } from '@prisma/client';
 import * as crypto from 'crypto';
 
 const prismaAudit = new PrismaClient();

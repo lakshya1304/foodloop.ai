@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Leaf, LogOut, LayoutDashboard, Settings, PackageOpen,
   LineChart, ShoppingCart, Truck, History, Users, Database, ShieldAlert,
-  Activity, Map as MapIcon, Cpu, Heart, Camera, Bell
+  Activity, Map as MapIcon, Cpu, Heart, Camera, Bell, Menu, X
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { NotificationBell } from '@/components/NotificationBell';
@@ -19,6 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const dispatch = useDispatch<AppDispatch>();
   const { user, status } = useSelector((state: RootState) => state.auth);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!user && status === 'idle') {
@@ -60,7 +61,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           { name: 'Active Route', href: base, icon: Truck },
           { name: 'Delivery History', href: `${base}/history`, icon: History },
           { name: 'Vehicle Diagnostics', href: `${base}/diagnostics`, icon: Activity },
-          { name: 'Driver Rewards', href: `${base}/rewards`, icon: ShieldAlert },
         ];
       case 'ADMIN':
         return [
@@ -89,13 +89,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen flex bg-slate-50/50">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-72 bg-white/80 backdrop-blur-xl border-r border-slate-100 flex flex-col hidden md:flex shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-10 relative">
-        <div className="h-20 flex items-center px-6 border-b border-slate-100 overflow-hidden">
-          <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-2 rounded-xl shadow-lg shadow-emerald-500/30 mr-3 flex-shrink-0">
-            <Leaf className="text-white h-5 w-5" />
+      <aside className={`fixed md:static inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-xl md:bg-white/80 border-r border-slate-100 flex flex-col shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] z-50 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <div className="h-20 flex items-center justify-between px-6 border-b border-slate-100 overflow-hidden">
+          <div className="flex items-center">
+            <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-2 rounded-xl shadow-lg shadow-emerald-500/30 mr-3 flex-shrink-0">
+              <Leaf className="text-white h-5 w-5" />
+            </div>
+            <span className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700 tracking-tight flex items-baseline gap-1.5 whitespace-nowrap overflow-hidden text-ellipsis">FoodLoop AI</span>
           </div>
-          <span className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700 tracking-tight flex items-baseline gap-1.5 whitespace-nowrap overflow-hidden text-ellipsis">FoodLoop AI <span className="text-[9px] font-bold text-slate-500 tracking-widest uppercase mt-0.5">Minimal-Waste Platform</span></span>
+          <button className="md:hidden p-2 text-slate-400 hover:text-slate-600 rounded-lg bg-slate-100" onClick={() => setIsSidebarOpen(false)}>
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         <div className="flex-1 py-8 px-6 space-y-2">
@@ -106,6 +119,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={link.name}
                 href={link.href}
+                onClick={() => setIsSidebarOpen(false)}
                 className={`flex items-center px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group ${isActive
                   ? 'bg-emerald-50 text-emerald-700 shadow-sm border border-emerald-100/50'
                   : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
@@ -144,10 +158,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <div className="md:hidden h-16 bg-white/80 backdrop-blur-xl border-b border-slate-100 flex items-center justify-between px-4 sticky top-0 z-20">
           <div className="flex items-center">
+            <button className="mr-3 p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors" onClick={() => setIsSidebarOpen(true)}>
+              <Menu className="h-6 w-6" />
+            </button>
             <div className="bg-gradient-to-br from-emerald-400 to-teal-500 p-1.5 rounded-lg shadow-sm mr-2">
               <Leaf className="text-white h-5 w-5" />
             </div>
-            <span className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700 tracking-tight flex items-baseline gap-1">FoodLoop AI <span className="text-[10px] font-bold text-slate-500 tracking-widest uppercase hidden sm:inline">Minimal-Waste Platform</span></span>
+            <span className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-700 tracking-tight flex items-baseline gap-1">FoodLoop AI</span>
           </div>
           <div className="flex items-center space-x-2">
             <NotificationBell />

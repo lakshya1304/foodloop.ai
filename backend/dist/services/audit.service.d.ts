@@ -5,7 +5,25 @@ export declare class AuditService {
         action: string;
         actorId?: string;
         details?: any;
-    }): Promise<any>;
-    getAuditLogs(): Promise<any>;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        entityId: string;
+        entityType: string;
+        action: string;
+        actorId: string | null;
+        details: string | null;
+        blockchainHash: string;
+    }>;
+    getAuditLogs(): Promise<{
+        id: string;
+        createdAt: Date;
+        entityId: string;
+        entityType: string;
+        action: string;
+        actorId: string | null;
+        details: string | null;
+        blockchainHash: string;
+    }[]>;
 }
 //# sourceMappingURL=audit.service.d.ts.map

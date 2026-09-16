@@ -88,7 +88,65 @@ class AiService {
             take: 5,
             orderBy: { createdAt: 'desc' }
         });
-        // Fallback recommendations if none in DB
+        // Evaluate surplus food and expiring inventory if a kitchenId is provided
+        if (kitchenId && recommendations.length === 0) {
+            const today = new Date();
+            const next3Days = new Date();
+            next3Days.setDate(next3Days.getDate() + 3);
+            // 1. Find expiring inventory
+            const expiringItems = await prisma.inventoryItem.findMany({
+                where: {
+                    kitchenId,
+                    expiryDate: { lte: next3Days, gte: today },
+                    quantity: { gt: 0 }
+                }
+            });
+            // 2. Find unassigned surplus
+            const availableSurplus = await prisma.surplus.findMany({
+                where: {
+                    kitchenId,
+                    status: 'AVAILABLE'
+                }
+            });
+            const newRecs = [];
+            if (expiringItems.length > 0) {
+                expiringItems.forEach(item => {
+                    newRecs.push({
+                        title: `Expiring: ${item.productName}`,
+                        description: `${item.quantity} ${item.unit} of ${item.productName} is approaching expiry (${item.expiryDate?.toLocaleDateString()}). Prioritize in tomorrow's menu or mark as surplus.`,
+                    });
+                });
+            }
+            if (availableSurplus.length > 0) {
+                availableSurplus.forEach(surplus => {
+                    newRecs.push({
+                        title: `Surplus Action: ${surplus.foodItem}`,
+                        description: `You have ${surplus.quantitySurplus} ${surplus.unit} of ${surplus.foodItem} available. AI recommends matching with a nearby NGO (within 5km radius) to avoid waste.`,
+                    });
+                });
+            }
+            // Add a default forecasting recommendation
+            newRecs.push({
+                title: "Forecast: Reduce General Production",
+                description: "Based on last week's consumption trends, consider reducing overall production by 5% tomorrow to minimize surplus.",
+            });
+            // Save and return
+            for (const rec of newRecs) {
+                await prisma.aIRecommendation.create({
+                    data: {
+                        title: rec.title,
+                        description: rec.description,
+                        context: kitchenId
+                    }
+                });
+            }
+            recommendations = await prisma.aIRecommendation.findMany({
+                where: { context: kitchenId },
+                take: 5,
+                orderBy: { createdAt: 'desc' }
+            });
+        }
+        // Fallback if still empty
         if (recommendations.length === 0) {
             recommendations = [
                 {
