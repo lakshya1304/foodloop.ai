@@ -21,14 +21,21 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
 
 export class DeliveryService {
   async getDeliveries(user: any) {
-    if (user.role !== 'DRIVER') {
+    let deliveries: any[] = [];
+    
+    if (user.role === 'DRIVER') {
+      const driver = await deliveryRepo.findDriverByUserId(user.id);
+      if (!driver) throw new Error('Driver profile not found');
+      deliveries = await deliveryRepo.findDeliveriesByDriverId(driver.id);
+    } else if (user.role === 'NGO_STAFF') {
+      deliveries = await deliveryRepo.findDeliveriesByNgoId(user.id);
+    } else if (user.role === 'KITCHEN_MANAGER') {
+      deliveries = await deliveryRepo.findDeliveriesByKitchenId(user.id);
+    } else if (user.role === 'ADMIN') {
+       deliveries = []; // Admin might need all, but returning empty for now if not implemented
+    } else {
       throw new Error('Unauthorized');
     }
-
-    const driver = await deliveryRepo.findDriverByUserId(user.id);
-    if (!driver) throw new Error('Driver profile not found');
-
-    const deliveries = await deliveryRepo.findDeliveriesByDriverId(driver.id);
 
     return deliveries.map(d => {
       let distanceKm = 12; // Default mock
