@@ -30,7 +30,7 @@ async function main() {
   await prisma.user.deleteMany();
   await prisma.organization.deleteMany();
 
-  const passwordHash = await bcrypt.hash('password123', 10);
+  const passwordHash = await bcrypt.hash('Qwertyui12345678@', 10);
 
   // Orgs
   const adminOrg = await prisma.organization.create({ data: { name: 'FoodLoop Admin', type: 'ADMIN' }});
@@ -39,16 +39,29 @@ async function main() {
   const ngoOrg1 = await prisma.organization.create({ data: { name: 'Hope Food Bank', type: 'NGO' }});
   const ngoOrg2 = await prisma.organization.create({ data: { name: 'Community Care', type: 'NGO' }});
 
-  // Users
+  // ─── Primary quick-login demo users (short emails) ───────────────────────────
   const adminUser = await prisma.user.create({
-    data: { email: 'admin@foodloop.ai', name: 'Super Admin', passwordHash, role: 'ADMIN', organizationId: adminOrg.id }
+    data: { email: 'admin@admin.com', name: 'Super Admin', passwordHash, role: 'ADMIN', organizationId: adminOrg.id }
   });
-  
+
   const kitchenManager = await prisma.user.create({
-    data: { email: 'manager@cityuni.edu', name: 'John Kitchen', passwordHash, role: 'KITCHEN_MANAGER', organizationId: kitchenOrg1.id }
+    data: { email: 'kitchen@kitchen.com', name: 'Kitchen Manager', passwordHash, role: 'KITCHEN_MANAGER', organizationId: kitchenOrg1.id }
   });
 
   const ngoStaff = await prisma.user.create({
+    data: { email: 'ngo@ngo.com', name: 'NGO Staff', passwordHash, role: 'NGO_STAFF', organizationId: ngoOrg1.id }
+  });
+
+  // ─── Additional demo users ────────────────────────────────────────────────────
+  await prisma.user.create({
+    data: { email: 'admin@foodloop.ai', name: 'FoodLoop Admin', passwordHash, role: 'ADMIN', organizationId: adminOrg.id }
+  });
+
+  await prisma.user.create({
+    data: { email: 'manager@cityuni.edu', name: 'John Kitchen', passwordHash, role: 'KITCHEN_MANAGER', organizationId: kitchenOrg1.id }
+  });
+
+  await prisma.user.create({
     data: { email: 'staff@hopefoodbank.org', name: 'Sarah NGO', passwordHash, role: 'NGO_STAFF', organizationId: ngoOrg1.id }
   });
 

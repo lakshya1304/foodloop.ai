@@ -3,10 +3,13 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { CheckCircle2, MapPin, Package, Truck } from 'lucide-react';
+import { CheckCircle2, MapPin, Package, Truck, Map as MapIcon, BellCheck, BellDot } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { useSocket } from '@/components/SocketProvider';
+import dynamic from 'next/dynamic';
+
+const RouteMap = dynamic(() => import('@/components/Map/RouteMap'), { ssr: false });
 
 export default function NgoDashboard() {
   const { data: surplusRes, isLoading: loadingSurplus, refetch: refetchSurplus } = useQuery({
@@ -25,6 +28,20 @@ export default function NgoDashboard() {
     }
   });
 
+  const { data: delRes, isLoading: loadingDel } = useQuery({
+    queryKey: ['ngo-deliveries'],
+    queryFn: async () => {
+      const res = await api.get('/deliveries');
+      return res.data.data.map((d: any) => ({
+        id: d.id,
+        status: d.status,
+        surplus: d.redistribution.surplus,
+        ngo: d.redistribution.ngo,
+        routeOptimized: d.calculatedRoute
+      }));
+    }
+  });
+
   const { socket } = useSocket();
 
   useEffect(() => {
@@ -32,6 +49,7 @@ export default function NgoDashboard() {
     const handleUpdate = () => {
       refetchSurplus();
       refetchStats();
+      toast.success('New Surplus Available Nearby!', { icon: <BellDot /> });
     };
     socket.on('surplus_updated', handleUpdate);
     return () => {
@@ -41,7 +59,8 @@ export default function NgoDashboard() {
 
   const surpluses = surplusRes || [];
   const stats = statsRes || { acceptedToday: 0, pendingArrival: 0 };
-  const loading = loadingSurplus || loadingStats;
+  const deliveries = delRes || [];
+  const loading = loadingSurplus || loadingStats || loadingDel;
 
   const handleAccept = async (id: string, quantity: number) => {
     try {
@@ -126,6 +145,14 @@ export default function NgoDashboard() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Live Route Map for Incoming Deliveries */}
+      <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-6 mt-8">
+        <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-4 flex items-center gap-2">
+          <MapIcon className="h-5 w-5 text-indigo-500" /> Incoming Deliveries Tracking
+        </h3>
+        <RouteMap tasks={deliveries} />
       </div>
     </div>
   );

@@ -7,9 +7,23 @@ const aiService = new AiService();
 
 export class AiController {
   async ocrExtract(request: FastifyRequest, reply: FastifyReply) {
-    const body = ocrSchema.parse(request.body);
-    const data = await aiService.ocrExtract(body);
-    return reply.send({ success: true, data });
+    if (!request.isMultipart()) {
+      return reply.status(400).send({ success: false, message: 'Request must be multipart/form-data' });
+    }
+
+    const data = await request.file();
+    if (!data) {
+      return reply.status(400).send({ success: false, message: 'No file uploaded' });
+    }
+
+    const fileBuffer = await data.toBuffer();
+    
+    try {
+      const result = await aiService.ocrExtract(fileBuffer, data.filename, data.mimetype);
+      return reply.send({ success: true, data: result });
+    } catch (err: any) {
+      return reply.status(500).send({ success: false, message: err.message });
+    }
   }
 
   async demandPrediction(request: FastifyRequest, reply: FastifyReply) {
@@ -26,6 +40,11 @@ export class AiController {
 
   async getRecommendations(request: FastifyRequest, reply: FastifyReply) {
     const data = await aiService.getRecommendations();
+    return reply.send({ success: true, data });
+  }
+
+  async getScans(request: FastifyRequest, reply: FastifyReply) {
+    const data = await aiService.getScans();
     return reply.send({ success: true, data });
   }
 }

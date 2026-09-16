@@ -2,8 +2,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Users, BarChart3, TrendingDown, Factory, HeartHandshake, Banknote, Droplets, MapPin } from 'lucide-react';
+import { Users, BarChart3, TrendingDown, Factory, HeartHandshake, Banknote, Droplets, MapPin, Download } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const GlobalHeatmap = dynamic(() => import('@/components/Map/GlobalHeatmap'), { ssr: false });
 
@@ -59,6 +60,16 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
+
+  const mockChartData = [
+    { name: 'Mon', co2: 400, waste: 240, meals: 480 },
+    { name: 'Tue', co2: 300, waste: 139, meals: 278 },
+    { name: 'Wed', co2: 200, waste: 980, meals: 1960 },
+    { name: 'Thu', co2: 278, waste: 390, meals: 780 },
+    { name: 'Fri', co2: 189, waste: 480, meals: 960 },
+    { name: 'Sat', co2: 239, waste: 380, meals: 760 },
+    { name: 'Sun', co2: 349, waste: 430, meals: 860 },
+  ];
 
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-10 animate-fade-in-up">
@@ -143,6 +154,28 @@ export default function AdminDashboard() {
           </div>
         </div>
         
+        <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-8 overflow-hidden">
+           <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-8">Weekly Impact Metrics</h3>
+           <div className="h-72 w-full">
+             <ResponsiveContainer width="100%" height="100%">
+               <BarChart data={mockChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                 <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                 <Tooltip 
+                    cursor={{fill: '#f8fafc'}}
+                    contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'}}
+                 />
+                 <Bar dataKey="co2" name="CO2 Saved (kg)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                 <Bar dataKey="waste" name="Waste Prevented (kg)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                 <Bar dataKey="meals" name="Meals Saved" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+               </BarChart>
+             </ResponsiveContainer>
+           </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 gap-8 mt-8">
         <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-8 overflow-hidden">
            <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-8">Registered Organizations</h3>
            <div className="overflow-x-auto">

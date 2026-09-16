@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Activity, AlertTriangle, Package, Utensils, Zap, Plus, Camera, Loader2, CheckCircle2 } from 'lucide-react';
+import { Activity, AlertTriangle, Package, Utensils, Zap, Plus, Camera, Loader2, CheckCircle2, Download, Map as MapIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardSkeleton } from '@/components/ui/Skeleton';
 import { useSocket } from '@/components/SocketProvider';
+import * as XLSX from 'xlsx';
+import dynamic from 'next/dynamic';
 
+const RouteMap = dynamic(() => import('@/components/Map/RouteMap'), { ssr: false });
 
 export default function KitchenDashboard() {
   const [showScanModal, setShowScanModal] = useState(false);
@@ -66,6 +69,20 @@ export default function KitchenDashboard() {
     }
   });
 
+  const { data: delRes, isLoading: loadingDel } = useQuery({
+    queryKey: ['kitchen-deliveries'],
+    queryFn: async () => {
+      const res = await api.get('/deliveries');
+      return res.data.data.map((d: any) => ({
+        id: d.id,
+        status: d.status,
+        surplus: d.redistribution.surplus,
+        ngo: d.redistribution.ngo,
+        routeOptimized: d.calculatedRoute
+      }));
+    }
+  });
+
   const { socket } = useSocket();
 
   useEffect(() => {
@@ -84,29 +101,51 @@ export default function KitchenDashboard() {
   const inventory = invRes || [];
   const sensors = sensRes || [];
   const recommendations = recRes || [];
+  const deliveries = delRes || [];
 
   const loading = loadingDash || loadingInv;
 
+  const handleGenerateReport = () => {
+    const wb = XLSX.utils.book_new();
+    const invSheet = XLSX.utils.json_to_sheet(inventory.map((i: any) => ({
+      Product: i.productName,
+      Category: i.category,
+      Quantity: `${i.quantity} ${i.unit}`,
+      Status: i.status,
+      ExpiryDate: i.expiryDate ? new Date(i.expiryDate).toLocaleDateString() : 'N/A'
+    })));
+    const surplusSheet = XLSX.utils.json_to_sheet((data?.activeSurpluses || []).map((s: any) => ({
+      FoodItem: s.foodItem,
+      Surplus: `${s.quantitySurplus} ${s.unit}`,
+      Date: new Date(s.date).toLocaleDateString(),
+      Status: s.status
+    })));
+
+    XLSX.utils.book_append_sheet(wb, invSheet, 'Inventory');
+    XLSX.utils.book_append_sheet(wb, surplusSheet, 'Surpluses');
+    XLSX.writeFile(wb, `Kitchen_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('Report generated successfully');
+  };
+
   const handleScan = async () => {
-    if (!scanText && !scanImage) {
-      toast.error('Please provide text or an image');
+    if (!scanImage) {
+      toast.error('Please capture or upload an image');
       return;
     }
     setScanLoading(true);
     try {
-      const payload: any = {};
-      if (scanText) payload.text = scanText;
-      if (scanImage) {
-        const [meta, imgData] = scanImage.split(',');
-        const mimeType = meta.match(/:(.*?);/)?.[1] || 'image/jpeg';
-        payload.imageParts = [{ inlineData: { data: imgData, mimeType } }];
-      }
+      // Create a blob from the data url
+      const resBlob = await fetch(scanImage);
+      const blob = await resBlob.blob();
       
-      const res = await api.post('/ai/ocr-extract', payload);
+      const formData = new FormData();
+      formData.append('file', blob, 'scan.jpg');
+      
+      const res = await api.post('/ai/ocr-extract', formData);
       setScanResult(res.data.data);
       setQualityResult(null);
-    } catch (err) {
-      toast.error('Error extracting data. Please try again.');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Error extracting data. Please try again.');
     } finally {
       setScanLoading(false);
     }
@@ -135,11 +174,20 @@ export default function KitchenDashboard() {
 
   const handleSaveInventory = async () => {
     if (!scanResult) return;
+    
+    // Quick validation
+    if (scanResult.manufacturing_date && scanResult.expiry_date) {
+      if (new Date(scanResult.manufacturing_date) > new Date(scanResult.expiry_date)) {
+        toast.error("Manufacturing date cannot be after expiry date!");
+        return;
+      }
+    }
+    
     try {
       await api.post('/inventory', {
         productName: scanResult.product_name || 'Unknown',
-        category: 'Dairy',
-        quantity: 1,
+        category: 'General', // Removed hardcoded Dairy
+        quantity: 1, 
         unit: 'item',
         batchNumber: scanResult.batch_number,
         manufacturingDate: scanResult.manufacturing_date,
@@ -149,8 +197,8 @@ export default function KitchenDashboard() {
       setShowScanModal(false);
       setScanResult(null);
       refetchInv();
-    } catch (err) {
-      toast.error('Failed to save inventory');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to save inventory');
     }
   };
 
@@ -200,6 +248,9 @@ export default function KitchenDashboard() {
           <p className="text-slate-500 mt-1">Manage inventory, track production, and reduce waste.</p>
         </div>
         <div className="flex flex-wrap gap-3">
+          <button onClick={handleGenerateReport} className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-xl shadow-sm text-sm font-semibold hover:bg-slate-50 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2">
+            <Download className="h-4 w-4 text-slate-500" /> Generate Report
+          </button>
           <button onClick={() => setShowScanModal(true)} className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-xl shadow-sm text-sm font-semibold hover:bg-slate-50 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2">
             <Camera className="h-4 w-4 text-slate-500" /> AI Scan
           </button>
@@ -342,6 +393,14 @@ export default function KitchenDashboard() {
             {sensors?.length === 0 && <div className="p-10 text-center text-slate-500 font-medium border border-dashed border-slate-200 m-6 rounded-2xl">No sensors active.</div>}
           </div>
         </div>
+      </div>
+
+      {/* Live Route Map for Kitchen Deliveries */}
+      <div className="bg-white/80 backdrop-blur-md border border-slate-100 rounded-3xl shadow-xl shadow-slate-200/50 p-6 mb-8">
+        <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-4 flex items-center gap-2">
+          <MapIcon className="h-5 w-5 text-indigo-500" /> Live Delivery Tracking
+        </h3>
+        <RouteMap tasks={deliveries} />
       </div>
 
       {/* Global Impact Leaderboard */}

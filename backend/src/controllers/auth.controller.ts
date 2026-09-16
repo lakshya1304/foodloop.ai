@@ -1,9 +1,11 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
 import { AuthService } from '../services/auth.service';
+import { AuditService } from '../services/audit.service';
 import { loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema } from '../schemas/auth.schema';
 
 const authService = new AuthService();
+const auditService = new AuditService();
 
 export class AuthController {
   
@@ -11,6 +13,14 @@ export class AuthController {
     const data = registerSchema.parse(request.body);
     const user = await authService.registerUser(data);
     
+    await auditService.logAction({
+      entityId: user.id,
+      entityType: 'USER',
+      action: 'REGISTER',
+      actorId: user.id,
+      details: { email: user.email, role: user.role }
+    });
+
     const fastify = request.server;
     const accessToken = fastify.jwt.sign({ id: user.id, role: user.role, organizationId: user.organizationId }, { expiresIn: '15m' });
     const refreshToken = await authService.createRefreshToken(user.id);
@@ -31,6 +41,14 @@ export class AuthController {
   async login(request: FastifyRequest, reply: FastifyReply) {
     const { email, password } = loginSchema.parse(request.body);
     const user = await authService.validateUser(email, password);
+
+    await auditService.logAction({
+      entityId: user.id,
+      entityType: 'USER',
+      action: 'LOGIN',
+      actorId: user.id,
+      details: { email: user.email }
+    });
 
     const fastify = request.server;
     const accessToken = fastify.jwt.sign({ id: user.id, role: user.role, organizationId: user.organizationId }, { expiresIn: '15m' });

@@ -1,15 +1,34 @@
 'use client';
 
 import { Users, Plus, Search, Filter, ShieldAlert, Building2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 
 export default function OrganizationsDirectory() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [organizations, setOrganizations] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchOrgs = async () => {
+      try {
+        const res = await api.get('/analytics/organizations');
+        if (res.data?.success) setOrganizations(res.data.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchOrgs();
+  }, []);
 
   const handleAction = () => {
     toast.info('Organization management features are restricted in MVP demo mode.');
   };
+
+  const filteredOrgs = organizations.filter(org => 
+    org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    org.type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -59,12 +78,7 @@ export default function OrganizationsDirectory() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {[
-              { id: 1, name: 'City Central Kitchen', type: 'KITCHEN', location: 'Downtown Hub', status: 'Active' },
-              { id: 2, name: 'Hope Foundation', type: 'NGO', location: 'North District', status: 'Active' },
-              { id: 3, name: 'Sunrise Bakery', type: 'KITCHEN', location: 'East Side', status: 'Active' },
-              { id: 4, name: 'Grace Shelter', type: 'NGO', location: 'West End', status: 'Pending Verification' },
-            ].map((org) => (
+            {filteredOrgs.map((org) => (
               <tr key={org.id} className="hover:bg-slate-50/50 transition-colors group">
                 <td className="px-6 py-4">
                   <div className="flex items-center">
@@ -81,11 +95,11 @@ export default function OrganizationsDirectory() {
                     {org.type}
                   </span>
                 </td>
-                <td className="px-6 py-4 font-medium text-slate-600">{org.location}</td>
+                <td className="px-6 py-4 font-medium text-slate-600">{org.location || 'Unknown'}</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center">
                     <div className={`h-2 w-2 rounded-full mr-2 ${org.status === 'Active' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
-                    <span className="text-sm font-semibold text-slate-700">{org.status}</span>
+                    <span className="text-sm font-semibold text-slate-700">{org.status || 'Active'}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 text-right">
@@ -97,6 +111,11 @@ export default function OrganizationsDirectory() {
             ))}
           </tbody>
         </table>
+        {filteredOrgs.length === 0 && (
+          <div className="p-10 text-center text-slate-500 font-medium font-mono text-sm border-t border-slate-100">
+            No organizations found.
+          </div>
+        )}
       </div>
     </div>
   );
