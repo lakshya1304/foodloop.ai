@@ -42,7 +42,14 @@ server.register(rateLimit, {
 server.register(helmet, { global: true, contentSecurityPolicy: false });
 
 server.register(cors, {
-  origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : true,
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    const allowed = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : [];
+    if (allowed.includes(origin) || origin.startsWith('http://localhost:') || origin.endsWith('.vercel.app')) {
+      return cb(null, true);
+    }
+    cb(null, false);
+  },
   credentials: true
 });
 

@@ -10,7 +10,14 @@ export function getIO(): Server | null {
 export function setupSocket(server: FastifyInstance) {
   ioInstance = new Server(server.server, {
     cors: {
-      origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : true,
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true);
+        const allowed = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : [];
+        if (allowed.includes(origin) || origin.startsWith('http://localhost:') || origin.endsWith('.vercel.app')) {
+          return cb(null, true);
+        }
+        cb(new Error('Not allowed by CORS'), false);
+      },
       credentials: true
     }
   });
